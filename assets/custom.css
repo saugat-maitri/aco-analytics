@@ -1,0 +1,31 @@
+h6 {
+    font-weight: bold;
+}
+
+p {
+    margin-bottom: 0;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 0;
+}
+
+.text-teal-blue {
+    color: #1e7baa;
+}
+
+.DateRangePickerInput {
+    display: flex;
+}
+
+.DateInput {
+    width: unset;
+}
+
+.DateInput_input {
+    font-size: 12px;
+    font-weight: normal;
+    padding: 4px 11px 4px;
+}
