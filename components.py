@@ -2,17 +2,17 @@ import dash_bootstrap_components as dbc
 from dash import html
 import plotly.graph_objs as go
 
-def kpi_card(title, value, compare_text, expected_text, last_year, expected):
-    return dbc.Col(
-        dbc.Card([
+def kpi_card(title, value, comparison_percent, expected_percent, comparison_value, expected, comparison_id):
+    return dbc.Card([
             dbc.CardBody([
                 dbc.Row([
                     dbc.Col([
-                        html.H6(title),
-                        html.H1(value, className="my-2", style={"font-size": "60px"}),
+                        html.H6(title, className="fw-semibold"),
+                        html.H1(value, className="my-2 fw-semibold", style={"font-size": "56px"}),
                         html.P([
-                            html.Span("Same Period Last Year: ", className="text-muted"),
-                            html.Span(f"{last_year}", className="fw-semibold")
+                            html.Span(className="text-muted", id=comparison_id),
+                            html.Span(": "),
+                            html.Span(f"{comparison_value}", className="fw-semibold")
                         ], className="text-nowrap"),
                         html.P([
                             html.Span("PMPM Expected: ", className="text-muted"),
@@ -22,14 +22,14 @@ def kpi_card(title, value, compare_text, expected_text, last_year, expected):
                     dbc.Col([
                         html.Div([
                             html.P([
-                                f"{compare_text}",
+                                f"{comparison_percent}",
                                 html.Span("▲", className="ms-2")
                             ], className="fw-semibold", style={"color": "red", "fontSize": "18px"}),
                             html.P("vs comparison period", style={"fontSize": "14px"}),
                         ], className="mb-4 lh-sm"),
                         html.Div([
                             html.P([
-                                f"{expected_text}",
+                                f"{expected_percent}",
                                 html.Span("▲", className="ms-2")
                             ], className="fw-semibold", style={"color": "red", "fontSize": "18px"}),
                             html.P("vs expected", style={"fontSize": "14px"}),
@@ -37,20 +37,19 @@ def kpi_card(title, value, compare_text, expected_text, last_year, expected):
                     ], width=5, className="text-end"),
                 ]),
             ])
-        ]), width=4,
-    )
+        ])
 
 def pmpm_vs_expected_bar():
     encounter_groups = ['inpatient', 'outpatient', 'office based', 'other']
     differences = [445, 362, 179, 51]
-    colors = ['red' if val > 0 else 'green' for val in differences]
+    colors = ['#ed3030' if val > 400 else '#428c8d' for val in differences]
 
     fig = go.Figure(go.Bar(
         x=differences,
         y=encounter_groups,
         orientation='h',
         marker_color=colors,
-        text=[f"${abs(val)} {'▲' if val > 0 else '▼'}" for val in differences],
+        text=[f"${abs(val)} {'▲' if val > 400 else '▼'}" for val in differences],
         textposition='outside'
     ))
 
@@ -72,7 +71,8 @@ def line_chart(title):
     fig = go.Figure(go.Scatter(
         x=dates,
         y=values,
-        mode='lines+markers'
+        mode='lines',
+        line=dict(color='#64b0e1')
     ))
 
     fig.update_layout(
@@ -96,7 +96,7 @@ def cost_drivers_bar():
         x=values,
         y=categories,
         orientation='h',
-        marker_color=['red' if v > 60 else 'green' for v in values],
+        marker_color=['#ed3030' if v > 60 else '#428c8d' for v in values],
         text=[f"${v}" for v in values],
         textposition='outside'
     ))

@@ -3,9 +3,9 @@ import calendar
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 import pandas as pd
+from callbacks import callback
 
 from components import (
-    kpi_card,
     pmpm_vs_expected_bar,
     line_chart,
     cost_drivers_bar,
@@ -25,7 +25,7 @@ def create_layout():
     return dbc.Container([
         html.Div([
             html.Div([
-                html.Img(src="assets/tuva_health_logo.png", width=250, className="me-2"),
+                html.Img(src="assets/tuva_health_logo.png", width=220, className="me-2"),
                 html.H3("| ACO Analytics", style={"color": "#1e7baa", "font-size": "24px"})
             ], className="d-flex align-items-center"),
             html.Div([
@@ -45,20 +45,29 @@ def create_layout():
                     html.Div([
                         html.P("Comparison Period", className="mb-1 fw-semibold text-teal-blue", style={"font-size": "12px"}),
                         dcc.Dropdown(
+                            value="Same Period Last Year",
                             id='year-dropdown',
-                            options=[{"label": str(y), "value": y} for y in years],
-                            placeholder="Select a year",
-                            className="w-100"
+                            options=[
+                                "Previous 18 Months",
+                                "Previous Month",
+                                "Previous Period",
+                                "Previous Quarter",
+                                "Previous Year",
+                                "Same Period Last Year",
+                            ],
+                            placeholder="Select a comparison period",
+                            clearable=False,
+                            style={"width": "195px"}
                         )
-                    ], style={"flex": 1}),
+                    ], style={"flex": "auto"}),
                 ], direction="horizontal", gap=2, style={"alignItems": "stretch"}),
             ], className="my-2"),
         ], className="d-flex justify-content-between my-1"),
         html.Div([
             dbc.Row([
-                kpi_card("PMPM Cost", "$1,038", "+5.2%", "+1.7%", "$987", "$1.0K"),
-                kpi_card("Utilization (PKPY)", "28,760", "+0.7%", "+1.5%", "28,569", "28.33K"),
-                kpi_card("Cost Per Encounter", "$434", "+4.0%", "+0.3%", "$417", "$432"),
+                dbc.Col(id="pmpm-cost-card", width=4),
+                dbc.Col(id="utilization-card", width=4),
+                dbc.Col(id="cost-per-encounter-card", width=4),
             ], className="mb-4"),
 
             dbc.Row([
@@ -124,3 +133,5 @@ def create_layout():
             ], className="mt-4")
         ], className="bg-light-subtle")
     ], fluid=True)
+
+callback
