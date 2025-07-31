@@ -38,7 +38,7 @@ def create_layout():
                             max_date_allowed=date(last_year, last_month, last_day),
                             initial_visible_month=date(last_year, 1, 1),
                             end_date=date(last_year, last_month, last_day),
-                            start_date=date(years[0], 1, 1),
+                            start_date=date(last_year, 1, 1),
                             style={"width": "195px"}
                         ),
                     ], style={"flex": 1}),
@@ -46,7 +46,7 @@ def create_layout():
                         html.P("Comparison Period", className="mb-1 fw-semibold text-teal-blue", style={"font-size": "12px"}),
                         dcc.Dropdown(
                             value="Same Period Last Year",
-                            id='year-dropdown',
+                            id='comparison-period-dropdown',
                             options=[
                                 "Previous 18 Months",
                                 "Previous Month",
@@ -85,13 +85,13 @@ def create_layout():
                         dbc.Card([
                             dbc.CardBody([
                                 html.H5("PMPM Trend", className="text-teal-blue"),
-                                dcc.Graph(id='pmpm-trend', figure=line_chart("PMPM Trend"))
+                                dcc.Graph(id='pmpm-trend')
                             ])
                         ]),
                         dbc.Card([
                             dbc.CardBody([
                                 html.H5("PKPY Trend", className="text-teal-blue"),
-                                dcc.Graph(id='pkpy-trend', figure=line_chart("PKPY Trend"))
+                                dcc.Graph(id='pkpy-trend')
                             ])
                         ]),
                     ], gap=2)
@@ -116,7 +116,7 @@ def create_layout():
                         dbc.Card([
                             dbc.CardBody([
                                 html.H5("Cost Per Trend", className="text-teal-blue"),
-                                dcc.Graph(id='cost-per-trend', figure=line_chart("Cost Per Trend"))
+                                dcc.Graph(id='cost-per-trend')
                             ])
                         ]),
                         dbc.Stack([
