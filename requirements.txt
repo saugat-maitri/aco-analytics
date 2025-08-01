@@ -1,0 +1,7 @@
+pandas
+dash
+dash-bootstrap-components
+snowflake-connector-python
+snowflake-connector-python[pandas]
+SQLAlchemy
+python-dotenv

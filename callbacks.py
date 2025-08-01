@@ -7,13 +7,20 @@ from functools import lru_cache
 from typing import Tuple
 
 from components import kpi_card
+from data import fetch_data
 
 
 @lru_cache(maxsize=2)
 def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Load and cache claims and member data."""
-    claims_agg = pd.read_csv("data/outlier_claims_agg.csv")
-    member_months = pd.read_csv("data/outlier_member_months.csv")
+    """Load and cache claims and member data from Snowflake."""
+    claims_query = "SELECT * FROM FACT_CLAIMS limit 1000"
+    member_query = "SELECT * FROM FACT_MEMBER_MONTHS limit 1000"
+
+    claims_agg = fetch_data(claims_query)
+    member_months = fetch_data(member_query)
+    claims_agg["YEAR_MONTH"] = claims_agg["YEAR_MONTH"].astype(int)
+    member_months["YEAR_MONTH"] = member_months["YEAR_MONTH"].astype(int)
+
     return claims_agg, member_months
 
 def get_comparison_period(start_date_str, end_date_str, comparison_period):
@@ -77,14 +84,14 @@ def update_comparison_text(comparison_period):
     Input("comparison-period-dropdown", "value")
 )
 def update_kpi_cards(start_date, end_date, comparison_period):
-    claims_agg, member_months = load_data()
+    claims_agg, member_months, expected = load_data()
 
     def calc_kpis(start_date, end_date):
 
-        claims_agg_df = claims_agg[(claims_agg["INCR_MONTH"] >= start_date) & (claims_agg["INCR_MONTH"] <= end_date)]
+        claims_agg_df = claims_agg[(claims_agg["YEAR_MONTH"] >= start_date) & (claims_agg["YEAR_MONTH"] <= end_date)]
         member_months_df = member_months[(member_months["YEAR_MONTH"] >= start_date) & (member_months["YEAR_MONTH"] <= end_date)]
 
-        mm = member_months_df[["MEMBER_ID", "YEAR_MONTH"]].drop_duplicates().shape[0]
+        mm = member_months_df[["PERSON_ID", "YEAR_MONTH"]].drop_duplicates().shape[0]
         encounters = claims_agg_df["ENCOUNTER_ID"].nunique()
         paid = claims_agg_df["PAID_AMOUNT"].sum()
         pmpm = paid / mm if mm else 0
@@ -119,14 +126,14 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
     # Load and prepare data
     claims_agg, member_months = load_data()
 
-    amount_by_month = claims_agg.groupby("INCR_MONTH").agg(PAID_AMOUNT=('PAID_AMOUNT', 'sum')).reset_index()
-    mm_grouped = member_months.groupby("YEAR_MONTH")["MEMBER_ID"].nunique().reset_index()
+    amount_by_month = claims_agg.groupby("YEAR_MONTH").agg(PAID_AMOUNT=('PAID_AMOUNT', 'sum')).reset_index()
+    mm_grouped = member_months.groupby("YEAR_MONTH")["PERSON_ID"].nunique().reset_index()
 
-    amount_by_month["DATE"] = pd.to_datetime(amount_by_month["INCR_MONTH"], format="%Y%m")
+    amount_by_month["DATE"] = pd.to_datetime(amount_by_month["YEAR_MONTH"], format="%Y%m")
     mm_grouped["DATE"] = pd.to_datetime(mm_grouped["YEAR_MONTH"], format="%Y%m")
 
     df = pd.merge(amount_by_month, mm_grouped, on="DATE", how="inner")
-    df["PMPM"] = df["PAID_AMOUNT"] / df["MEMBER_ID"]
+    df["PMPM"] = df["PAID_AMOUNT"] / df["PERSON_ID"]
     df = df.sort_values("DATE").reset_index(drop=True)
 
     # Selected period
@@ -167,7 +174,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
         # Calculate PMPM from range
         if not comp_df.empty:
             total_paid = comp_df["PAID_AMOUNT"].sum()
-            total_members = comp_df["MEMBER_ID"].sum()
+            total_members = comp_df["PERSON_ID"].sum()
             if total_members > 0:
                 avg_pmpm = total_paid / total_members
                 comparison_data.append((month, avg_pmpm))
@@ -218,14 +225,14 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
 
     # Load and prepare data
     claims_agg, member_months = load_data()
-    encounters_by_month = claims_agg.groupby("INCR_MONTH")["ENCOUNTER_ID"].nunique().reset_index()
-    mm_grouped = member_months.groupby("YEAR_MONTH")["MEMBER_ID"].nunique().reset_index()
+    encounters_by_month = claims_agg.groupby("YEAR_MONTH")["ENCOUNTER_ID"].nunique().reset_index()
+    mm_grouped = member_months.groupby("YEAR_MONTH")["PERSON_ID"].nunique().reset_index()
 
-    encounters_by_month["DATE"] = pd.to_datetime(encounters_by_month["INCR_MONTH"], format="%Y%m")
+    encounters_by_month["DATE"] = pd.to_datetime(encounters_by_month["YEAR_MONTH"], format="%Y%m")
     mm_grouped["DATE"] = pd.to_datetime(mm_grouped["YEAR_MONTH"], format="%Y%m")
 
     df = pd.merge(encounters_by_month, mm_grouped, on="DATE", how="inner")
-    df["PKPY"] = (df["ENCOUNTER_ID"] / df["MEMBER_ID"]) * 12000
+    df["PKPY"] = (df["ENCOUNTER_ID"] / df["PERSON_ID"]) * 12000
     df = df.sort_values("DATE").reset_index(drop=True)
 
     # Selected period
@@ -266,7 +273,7 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
         # Calculate PMPM from range
         if not comp_df.empty:
             total_encounters = comp_df["ENCOUNTER_ID"].sum()
-            total_members = comp_df["MEMBER_ID"].sum()
+            total_members = comp_df["PERSON_ID"].sum()
             if total_members > 0:
                 avg_pkpy = (total_encounters / total_members) * 12000
                 comparison_data.append((month, avg_pkpy))
@@ -317,13 +324,13 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
 
     # Load and prepare data
     claims_agg, member_months = load_data()
-    monthly_agg = claims_agg.groupby("INCR_MONTH").agg(
+    monthly_agg = claims_agg.groupby("YEAR_MONTH").agg(
         PAID_AMOUNT=('PAID_AMOUNT', 'sum'),
         ENCOUNTERS=('ENCOUNTER_ID', 'nunique')
     ).reset_index().assign(
         COST_PER_ENCOUNTER=lambda df: df['PAID_AMOUNT'] / df['ENCOUNTERS']
     )
-    monthly_agg["INCR_MONTH"] = pd.to_datetime(monthly_agg["INCR_MONTH"], format="%Y%m")
+    monthly_agg["YEAR_MONTH"] = pd.to_datetime(monthly_agg["YEAR_MONTH"], format="%Y%m")
 
     # Selected period
     start = pd.to_datetime(start_date).replace(day=1)
@@ -331,8 +338,8 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
     selected_months = pd.date_range(start=start, end=end, freq='MS')
 
     # Current period data
-    current_df = monthly_agg[monthly_agg["INCR_MONTH"].isin(selected_months)]
-    current_data = list(zip(current_df["INCR_MONTH"], current_df["COST_PER_ENCOUNTER"]))
+    current_df = monthly_agg[monthly_agg["YEAR_MONTH"].isin(selected_months)]
+    current_data = list(zip(current_df["YEAR_MONTH"], current_df["COST_PER_ENCOUNTER"]))
 
     # Determine comparison data
     comparison_data = []
@@ -358,7 +365,7 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
 
         # Get comparison date range
         comp_range = pd.date_range(start=comp_start, end=comp_end, freq='MS')
-        comp_df = monthly_agg[monthly_agg["INCR_MONTH"].isin(comp_range)]
+        comp_df = monthly_agg[monthly_agg["YEAR_MONTH"].isin(comp_range)]
 
         # Calculate PMPM from range
         if not comp_df.empty:
