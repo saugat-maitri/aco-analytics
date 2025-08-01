@@ -96,7 +96,9 @@ def line_chart(title):
         # title=title,
         margin=dict(l=20, r=20, t=0, b=20),
         plot_bgcolor='white',
-        height=100
+        height=100,
+        xaxis_title='',
+        xaxis=dict(showticklabels=False),
     )
 
     return fig
