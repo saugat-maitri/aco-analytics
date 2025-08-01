@@ -171,7 +171,9 @@ def risk_distribution_scatter():
     fig.update_layout(
         height=170,
         margin=dict(l=20, r=20, t=20, b=20),
-        plot_bgcolor='white'
+        plot_bgcolor='white',
+        xaxis_title='',
+        xaxis=dict(showticklabels=False),
     )
 
     return fig

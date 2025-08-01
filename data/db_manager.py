@@ -1,12 +1,13 @@
 import os
-from flask import abort
 import snowflake.connector
+from flask import abort
 from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
 
-snowflake_pool = None
+# Global connection instance
+_snowflake_connection = None
 
 # Setup Snowflake connection parameters
 SNOWFLAKE_CONFIG = {
@@ -19,9 +20,11 @@ SNOWFLAKE_CONFIG = {
     "auth_method": os.getenv("SNOWFLAKE_AUTH_METHOD")
 }
 
-def connect_snowflake():
-    global snowflake_pool
-    if snowflake_pool is None:
+def get_snowflake_connection():
+    """Get or create a Snowflake connection (singleton pattern)."""
+    global _snowflake_connection
+    
+    if _snowflake_connection is None:
         try:
             connect_args = {
                 "user": SNOWFLAKE_CONFIG["user"],
@@ -32,21 +35,26 @@ def connect_snowflake():
                 "autocommit": True,
                 "client_session_keep_alive": True
             }
+            
             if SNOWFLAKE_CONFIG.get("auth_method", "").lower() == "externalbrowser":
                 connect_args["authenticator"] = "externalbrowser"
             else:
                 connect_args["password"] = SNOWFLAKE_CONFIG["password"]
-            snowflake_pool = snowflake.connector.connect(**connect_args)
+                
+            _snowflake_connection = snowflake.connector.connect(**connect_args)
+            print("Snowflake connection established successfully")
+            
         except snowflake.connector.Error as e:
             print(f"Error connecting to Snowflake: {e}")
             abort(500, description="Error connecting to Snowflake")
-    return snowflake_pool
+    
+    return _snowflake_connection
 
 def fetch_data(query):
-    conn = connect_snowflake()
+    """Execute a query and return pandas DataFrame."""
+    conn = get_snowflake_connection()
     try:
         cursor = conn.cursor()
-        # Ensure query is optimized, avoiding `SELECT *`
         cursor.execute(query)
         data = cursor.fetch_pandas_all()
         return data
