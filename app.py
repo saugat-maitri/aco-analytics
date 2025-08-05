@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from data.data_loader import initialize_sqlite
 from layouts import create_layout
 from constants import sqlite_path
+import callbacks  # Import callbacks to register them with the app
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 app.title = "TUVA Health ACO Analytics"

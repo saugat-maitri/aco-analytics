@@ -49,17 +49,3 @@ def get_snowflake_connection():
             abort(500, description="Error connecting to Snowflake")
     
     return _snowflake_connection
-
-def fetch_data(query):
-    """Execute a query and return pandas DataFrame."""
-    conn = get_snowflake_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute(query)
-        data = cursor.fetch_pandas_all()
-        return data
-    except snowflake.connector.Error as e:
-        print(f"Error executing query: {e}")
-        abort(500, description="Error executing Snowflake query")
-    finally:
-        cursor.close()

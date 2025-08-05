@@ -3,7 +3,6 @@ import calendar
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 import pandas as pd
-from callbacks import callback
 
 from components import (
     pmpm_vs_expected_bar,
@@ -132,5 +131,3 @@ def create_layout():
             ], className="mt-4")
         ], className="bg-light-subtle")
     ], fluid=True)
-
-callback
