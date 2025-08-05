@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import html, dcc
 import plotly.graph_objs as go
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
@@ -122,13 +122,64 @@ def cost_drivers_bar():
 
     fig.update_layout(
         height=300,
-        yaxis=dict(autorange="reversed"),
         margin=dict(l=20, r=20, t=20, b=20),
         plot_bgcolor='white'
     )
 
     return fig
 
+
+def condition_ccsr_graph(data):
+    fig = go.Figure(go.Bar(
+        x=data['PMPM'],
+        y=data['CCSR_CATEGORY_DESCRIPTION'],
+        orientation='h',
+        marker_color=['#ed3030' if v > 800 else '#428c8d' for v in data['PMPM']],
+        text=[f"${v:,.0f}" for v in data['PMPM']],
+        textposition='outside'
+    ))
+
+    
+    # Truncate long category descriptions
+    def truncate_text(text, max_length=30):
+        return text[:max_length] + '...' if len(text) > max_length else text
+    
+    data['TRUNCATED_CATEGORY'] = data['CCSR_CATEGORY_DESCRIPTION'].apply(
+        lambda x: truncate_text(x, 30)
+    )
+
+    fig = go.Figure(go.Bar(
+        x=data['PMPM'],
+        y=data['TRUNCATED_CATEGORY'],
+        orientation='h',
+        marker_color= '#64AFE0',
+        text=[f"${v:,.0f}" for v in data['PMPM']],
+        textposition='outside',
+        hovertemplate='CCSR Category:  %{customdata}<br>               PMPM:  %{text}<extra></extra>',
+        customdata=data['CCSR_CATEGORY_DESCRIPTION'],
+        texttemplate=[f"${v:,.0f}" for v in data['PMPM']]
+    ))
+
+    fig.update_layout(
+        height=20 * len(data),
+        yaxis=dict(
+            autorange="reversed",
+            tickfont=dict(size=10)
+        ),
+        xaxis=dict(
+            title="Percentage of Total Cost (%)",
+            ticksuffix="%"
+        ),
+        hoverlabel=dict(
+            bgcolor='white'
+            ),
+        margin=dict(l=20, r=150, t=20, b=20),
+        plot_bgcolor='white'
+    )
+
+    return html.Div(
+        dcc.Graph(figure=fig, config={"displayModeBar": False})
+    )
 
 def demographics_card():
     return dbc.Card([

@@ -29,3 +29,8 @@ p {
     font-weight: normal;
     padding: 4px 11px 4px;
 }
+
+#condition-ccsr {
+    height: 350px;
+    overflow-y: auto;
+}

@@ -6,7 +6,7 @@ import plotly.graph_objs as go
 from functools import lru_cache
 from typing import Tuple
 
-from components import kpi_card
+from components import condition_ccsr_graph, kpi_card
 from data.db_manager import fetch_data
 
 
@@ -79,6 +79,7 @@ def update_comparison_text(comparison_period):
     Output("pmpm-cost-card", "children"),
     Output("utilization-card", "children"),
     Output("cost-per-encounter-card", "children"),
+    Output("condition-ccsr", "children"),
     Input("my-date-picker-range", "start_date"),
     Input("my-date-picker-range", "end_date"),
     Input("comparison-period-dropdown", "value")
@@ -104,13 +105,37 @@ def update_kpi_cards(start_date, end_date, comparison_period):
     pmpm_main, util_main, cpe_main = calc_kpis(start, end)
     pmpm_comp, util_comp, cpe_comp = calc_kpis(comp_start, comp_end)
 
+    def calculate_ccsr_pmpm(start_date, end_date):
+        claims_agg_df = claims_agg[(claims_agg["YEAR_MONTH"] >= start_date) & (claims_agg["YEAR_MONTH"] <= end_date)]
+        member_months_df = member_months[(member_months["YEAR_MONTH"] >= start_date) & (member_months["YEAR_MONTH"] <= end_date)]
+
+        if claims_agg_df.empty or member_months_df.empty:
+            return 0
+
+        ccsr_pmpm = (
+            claims_agg_df.groupby("CCSR_CATEGORY_DESCRIPTION")["PAID_AMOUNT"]
+            .sum()
+            .reset_index()
+            .rename(columns={"PAID_AMOUNT": "TOTAL_PAID"})
+            .sort_values('TOTAL_PAID', ascending=False)
+        )
+        total_member_months = member_months_df["PERSON_ID"].nunique()
+        if total_member_months == 0:
+            ccsr_pmpm["PMPM"] = 0
+        else:
+            ccsr_pmpm["PMPM"] = ccsr_pmpm["TOTAL_PAID"] / total_member_months
+        return ccsr_pmpm
+
+    ccsr_pmpm = calculate_ccsr_pmpm(start, end)
+
     # Comparison values (dummy for now)
     expected = 300
     # Return dynamic cards
     return (
         kpi_card("PMPM Cost", pmpm_main, pmpm_comp, expected, "comparison-pmpm"),
         kpi_card("Utilization (PKPY)", util_main, util_comp, expected, "comparison-utilization"),
-        kpi_card("Cost Per Encounter", cpe_main, cpe_comp, expected, "comparison-cost")
+        kpi_card("Cost Per Encounter", cpe_main, cpe_comp, expected, "comparison-cost"),
+        condition_ccsr_graph(ccsr_pmpm)
     )
 
 @callback(
