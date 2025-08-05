@@ -1,10 +1,11 @@
+
 from dash import Input, Output, callback
 import pandas as pd
 from functools import lru_cache
 from typing import Tuple
 
 from components import kpi_card
-from data import fetch_data
+from data.db_query import query_sqlite
 from utils import dt_to_yyyymm
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -15,8 +16,8 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Load and cache claims and member data from Snowflake."""
     claims_query = "SELECT * FROM FACT_CLAIMS limit 1000"
     member_query = "SELECT * FROM FACT_MEMBER_MONTHS limit 1000"
-    claims_agg = fetch_data(claims_query)
-    member_months = fetch_data(member_query)
+    claims_agg = query_sqlite(claims_query)
+    member_months = query_sqlite(member_query)
     claims_agg["YEAR_MONTH"] = claims_agg["YEAR_MONTH"].astype(int)
     member_months["YEAR_MONTH"] = member_months["YEAR_MONTH"].astype(int)
 

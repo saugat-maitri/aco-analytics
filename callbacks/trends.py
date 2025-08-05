@@ -5,7 +5,7 @@ from functools import lru_cache
 from typing import Tuple
 from pandas import DateOffset
 
-from data import fetch_data
+from data.db_query import query_sqlite
 
 
 @lru_cache(maxsize=2)
@@ -14,8 +14,8 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     claims_query = "SELECT * FROM FACT_CLAIMS limit 1000"
     member_query = "SELECT * FROM FACT_MEMBER_MONTHS limit 1000"
 
-    claims_agg = fetch_data(claims_query)
-    member_months = fetch_data(member_query)
+    claims_agg = query_sqlite(claims_query)
+    member_months = query_sqlite(member_query)
     claims_agg["YEAR_MONTH"] = claims_agg["YEAR_MONTH"].astype(int)
     member_months["YEAR_MONTH"] = member_months["YEAR_MONTH"].astype(int)
 
