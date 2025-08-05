@@ -7,7 +7,7 @@ from functools import lru_cache
 from typing import Tuple
 
 from components import kpi_card
-from data import fetch_data
+from data.db_manager import fetch_data
 
 
 @lru_cache(maxsize=2)
