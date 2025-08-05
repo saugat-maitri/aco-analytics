@@ -29,3 +29,7 @@ p {
     font-weight: normal;
     padding: 4px 11px 4px;
 }
+
+#comparison-period-dropdown {
+    font-size: 12px;
+}
