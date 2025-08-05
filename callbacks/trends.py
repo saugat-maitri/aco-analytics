@@ -87,7 +87,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
     df = pd.merge(amount_by_month, mm_grouped, on="YEAR_MONTH", how="inner")
     df["PMPM"] = df["PAID_AMOUNT"] / df["PERSON_ID"]
     df = df.sort_values("YEAR_MONTH").reset_index(drop=True)
-    df["YEAR_MONTH"] = pd.to_datetime(mm_grouped["YEAR_MONTH"], format="%Y%m")
+    df["YEAR_MONTH"] = pd.to_datetime(df["YEAR_MONTH"], format="%Y%m")
 
     # Selected period
     start = pd.to_datetime(start_date).replace(day=1)
@@ -98,7 +98,6 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
     current_df = df[df["YEAR_MONTH"].isin(selected_months)]
     current_data = list(zip(current_df["YEAR_MONTH"], current_df["PMPM"]))
 
-    # Determine comparison data
     comparison_data = []
     for month in selected_months:
         comp_range = get_comparison_offset(month, comparison_period)
@@ -112,7 +111,6 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
                 avg_pmpm = total_paid / total_members
                 comparison_data.append((month, avg_pmpm))
 
-    # Plot
     return plot_trend(current_data, comparison_data)
 
 
@@ -132,7 +130,7 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
     df = pd.merge(encounters_by_month, mm_grouped, on="YEAR_MONTH", how="inner")
     df["PKPY"] = (df["ENCOUNTER_ID"] / df["PERSON_ID"]) * 12000
     df = df.sort_values("YEAR_MONTH").reset_index(drop=True)
-    df["YEAR_MONTH"] = pd.to_datetime(mm_grouped["YEAR_MONTH"], format="%Y%m")
+    df["YEAR_MONTH"] = pd.to_datetime(df["YEAR_MONTH"], format="%Y%m")
 
     # Selected period
     start = pd.to_datetime(start_date).replace(day=1)
@@ -143,13 +141,12 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
     current_df = df[df["YEAR_MONTH"].isin(selected_months)]
     current_data = list(zip(current_df["YEAR_MONTH"], current_df["PKPY"]))
 
-    # Determine comparison data
     comparison_data = []
     for month in selected_months:
         comp_range = get_comparison_offset(month, comparison_period)
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
 
-        # Calculate PMPM from range
+        # Calculate PKPY from range
         if not comp_df.empty:
             total_encounters = comp_df["ENCOUNTER_ID"].sum()
             total_members = comp_df["PERSON_ID"].sum()
@@ -157,7 +154,6 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
                 avg_pkpy = (total_encounters / total_members) * 12000
                 comparison_data.append((month, avg_pkpy))
 
-    # Plot
     return plot_trend(current_data, comparison_data)
 
 
@@ -188,7 +184,6 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
     current_df = monthly_agg[monthly_agg["YEAR_MONTH"].isin(selected_months)]
     current_data = list(zip(current_df["YEAR_MONTH"], current_df["COST_PER_ENCOUNTER"]))
 
-    # Determine comparison data
     comparison_data = []
 
     for month in selected_months:
@@ -196,7 +191,7 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
         comp_range = get_comparison_offset(month, comparison_period)
         comp_df = monthly_agg[monthly_agg["YEAR_MONTH"].isin(comp_range)]
 
-        # Calculate PMPM from range
+        # Calculate Cost Per Encounter from range
         if not comp_df.empty:
             total_paid = comp_df["PAID_AMOUNT"].sum()
             total_encounters = comp_df["ENCOUNTERS"].sum()
@@ -204,5 +199,4 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
                 avg_cost_per_encounter = total_paid / total_encounters
                 comparison_data.append((month, avg_cost_per_encounter))
 
-    # Plot
     return plot_trend(current_data, comparison_data)
