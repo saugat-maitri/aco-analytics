@@ -7,7 +7,6 @@ from callbacks import callback
 
 from components import (
     pmpm_vs_expected_bar,
-    line_chart,
     cost_drivers_bar,
     demographics_card,
     risk_distribution_scatter
