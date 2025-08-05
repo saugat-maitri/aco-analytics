@@ -1,6 +1,6 @@
 # TUVA Health ACO Analytics
 
-This is a Dash web application for analyzing Accountable Care Organization (ACO) claims and member data. It provides interactive KPIs, trends, and cost driver visualizations, powered by data from Snowflake.
+Dash web application for analyzing Accountable Care Organization (ACO) claims and member data. It provides interactive KPIs, trends, and cost driver visualizations, powered by data from Snowflake.
 
 ## Features
 - Dynamic KPI cards (PMPM Cost, Utilization, Cost Per Encounter) based on user-selected date ranges and comparison periods
@@ -22,6 +22,8 @@ aco-analytics/
 │   ├── __init__.py
 │   ├── kpi.py            # KPI card callbacks
 │   └── trends.py         # Trend graph callbacks
+├── data/               # Used for testing (will be removed)
+│   ├── 
 ├── assets/               # Static assets (CSS, images)
 │   ├── custom.css
 │   └── tuva_health_logo.png
@@ -33,7 +35,7 @@ aco-analytics/
 
 1. Clone the repository:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/saugat-maitri/aco-analytics
    cd aco-analytics
    ```
 2. Install dependencies:
