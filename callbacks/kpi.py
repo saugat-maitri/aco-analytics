@@ -1,27 +1,11 @@
 
 from dash import Input, Output, callback
-import pandas as pd
-from functools import lru_cache
-from typing import Tuple
 
 from components import kpi_card
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm
+from utils import dt_to_yyyymm, load_data
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
-
-@lru_cache(maxsize=2)
-def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Load and cache claims and member data from Snowflake."""
-    claims_query = "SELECT * FROM FACT_CLAIMS limit 1000"
-    member_query = "SELECT * FROM FACT_MEMBER_MONTHS limit 1000"
-    claims_agg = query_sqlite(claims_query)
-    member_months = query_sqlite(member_query)
-    claims_agg["YEAR_MONTH"] = claims_agg["YEAR_MONTH"].astype(int)
-    member_months["YEAR_MONTH"] = member_months["YEAR_MONTH"].astype(int)
-
-    return claims_agg, member_months
 
 def get_comparison_period(start_date_str, end_date_str, comparison_period):
     start = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -92,8 +76,8 @@ def update_comparison_text(comparison_period):
     Output("pmpm-cost-card", "children"),
     Output("utilization-card", "children"),
     Output("cost-per-encounter-card", "children"),
-    Input("my-date-picker-range", "start_date"),
-    Input("my-date-picker-range", "end_date"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value")
 )
 def update_kpi_cards(start_date, end_date, comparison_period):
