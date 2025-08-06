@@ -2,7 +2,6 @@ from datetime import date
 import calendar
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-import pandas as pd
 
 from components import (
     pmpm_vs_expected_bar,
@@ -10,11 +9,12 @@ from components import (
     demographics_card,
     risk_distribution_scatter
 )
+from utils import load_data
 
-df = pd.read_csv('data/outlier_member_months.csv')
+claims_agg, _ = load_data()
 
-# Extract unique years and sort them
-years = sorted(df['YEAR'].unique())
+# Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
+years = sorted((claims_agg['YEAR_MONTH'] // 100).unique())
 last_year = years[-1]
 last_month = 12
 last_day = calendar.monthrange(last_year, last_month)[1]
@@ -31,10 +31,9 @@ def create_layout():
                     html.Div([
                         html.P("Selected Period", className="mb-1 fw-semibold text-teal-blue", style={"font-size": "12px"}),
                         dcc.DatePickerRange(
-                            id='my-date-picker-range',
+                            id='date-picker-input',
                             min_date_allowed=date(years[0], 1, 1),
                             max_date_allowed=date(last_year, last_month, last_day),
-                            initial_visible_month=date(last_year, 1, 1),
                             end_date=date(last_year, last_month, last_day),
                             start_date=date(last_year, 1, 1),
                             style={"width": "195px"}
