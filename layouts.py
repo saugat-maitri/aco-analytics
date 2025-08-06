@@ -13,8 +13,8 @@ from utils import load_data
 
 claims_agg, _ = load_data()
 
-# Extract unique years and sort them
-years = sorted(claims_agg['YEAR_MONTH'] // 100)
+# Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
+years = sorted((claims_agg['YEAR_MONTH'] // 100).unique())
 last_year = years[-1]
 last_month = 12
 last_day = calendar.monthrange(last_year, last_month)[1]

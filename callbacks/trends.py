@@ -6,7 +6,6 @@ from pandas import DateOffset
 from utils import load_data
 
 
-
 def get_comparison_offset(month, comparison_period):
     if comparison_period == "Previous Month":
         comp_start = comp_end = month - DateOffset(months=1)
