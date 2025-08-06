@@ -1,25 +1,11 @@
 from dash import Input, Output, callback
 import pandas as pd
 import plotly.graph_objs as go
-from functools import lru_cache
-from typing import Tuple
 from pandas import DateOffset
 
-from data.db_query import query_sqlite
+from utils import load_data
 
 
-@lru_cache(maxsize=2)
-def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Load and cache claims and member data from Snowflake."""
-    claims_query = "SELECT * FROM FACT_CLAIMS limit 1000"
-    member_query = "SELECT * FROM FACT_MEMBER_MONTHS limit 1000"
-
-    claims_agg = query_sqlite(claims_query)
-    member_months = query_sqlite(member_query)
-    claims_agg["YEAR_MONTH"] = claims_agg["YEAR_MONTH"].astype(int)
-    member_months["YEAR_MONTH"] = member_months["YEAR_MONTH"].astype(int)
-
-    return claims_agg, member_months
 
 def get_comparison_offset(month, comparison_period):
     if comparison_period == "Previous Month":
@@ -73,8 +59,8 @@ def plot_trend(current_data, comparison_data):
 
 @callback(
     Output("pmpm-trend", "figure"),
-    Input("my-date-picker-range", "start_date"),
-    Input("my-date-picker-range", "end_date"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value")
 )
 def update_pmpm_trend(start_date, end_date, comparison_period):
@@ -116,8 +102,8 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
 
 @callback(
     Output("pkpy-trend", "figure"),
-    Input("my-date-picker-range", "start_date"),
-    Input("my-date-picker-range", "end_date"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value")
 )
 def update_pkpy_trend(start_date, end_date, comparison_period):
@@ -159,8 +145,8 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
 
 @callback(
     Output("cost-per-trend", "figure"),
-    Input("my-date-picker-range", "start_date"),
-    Input("my-date-picker-range", "end_date"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value")
 )
 def update_cost_per_trend(start_date, end_date, comparison_period):
