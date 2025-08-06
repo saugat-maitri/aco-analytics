@@ -34,3 +34,7 @@ p {
     height: 350px;
     overflow-y: auto;
 }
+
+#comparison-period-dropdown {
+    font-size: 12px;
+}
