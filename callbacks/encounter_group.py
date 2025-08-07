@@ -13,15 +13,15 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         WITH claims_by_encounter_group AS (
             SELECT
                 grp.ENCOUNTER_GROUP,
-                SUM(PAID_AMOUNT) as total_paid
+                SUM(PAID_AMOUNT) as TOTAL_PAID
             FROM FACT_CLAIMS clm
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
-                ON clm.encounter_group_sk = grp.encounter_group_sk
+                ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             GROUP BY grp.ENCOUNTER_GROUP
         ),
         member_months AS (
-            SELECT COUNT(DISTINCT person_id || '-' || year_month) AS member_months_count
+            SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS MEMBER_MONTHS_COUNT
             FROM FACT_MEMBER_MONTHS
             WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
         )
@@ -29,8 +29,8 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         SELECT
             clm.ENCOUNTER_GROUP,
             CASE 
-                WHEN mm.member_months_count > 0 
-                THEN clm.total_paid / mm.member_months_count 
+                WHEN mm.MEMBER_MONTHS_COUNT > 0 
+                THEN clm.TOTAL_PAID / mm.MEMBER_MONTHS_COUNT 
                 ELSE 0 
             END AS PMPM
         FROM claims_by_encounter_group clm
