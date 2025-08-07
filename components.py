@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import html, dcc
 import plotly.graph_objs as go
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
@@ -130,6 +130,62 @@ def cost_drivers_bar():
     return fig
 
 
+def condition_ccsr_cost_driver_graph(data):
+    # Handle None or empty data
+    if data is None:
+        return html.Div("No data available")
+    
+    # Truncate long category descriptions
+    def truncate_text(text, max_length=30):
+        return text[:max_length] + '...' if len(text) > max_length else text
+    
+    data['TRUNCATED_CATEGORY'] = data['CCSR_CATEGORY_DESCRIPTION'].apply(
+        lambda x: truncate_text(x, 30)
+    )
+
+    fig = go.Figure(go.Bar(
+        x=data['PMPM'],
+        y=data['TRUNCATED_CATEGORY'],
+        orientation='h',
+        marker_color='#64AFE0',
+        text=[f"${v:,.0f}" for v in data['PMPM']],
+        textposition='outside',
+        hovertemplate=('CCSR Category:  %{customdata}<br>PMPM:  %{text}<extra></extra>'),
+        customdata=data['CCSR_CATEGORY_DESCRIPTION'],
+        texttemplate="$%{x:,.0f}"
+    ))
+    
+    # Calculate x-axis range with padding for text labels
+    max_value = data['PMPM'].max() if not data.empty else 0
+    x_range_max = max_value * 1.3  # Add 30% padding for text labels
+    
+    fig.update_layout(
+        height=max(300, 20 * len(data)),
+        yaxis=dict(
+            autorange="reversed",
+            tickfont=dict(size=10)
+        ),
+        xaxis=dict(
+            title="PMPM",
+            tickformat="$,",
+            range=[0, x_range_max]  # Set explicit range with padding
+        ),
+        hoverlabel=dict(
+            bgcolor='white'
+        ),
+        margin=dict(l=20, r=20, t=20, b=20),
+        plot_bgcolor='white',
+        autosize=True
+    )
+
+    return html.Div(
+        dcc.Graph(
+            figure=fig, 
+            config={"displayModeBar": False},
+            style={"width": "100%", "height": "100%"}
+        )
+    )
+
 def demographics_card():
     return dbc.Card([
         dbc.CardBody([
@@ -171,7 +227,9 @@ def risk_distribution_scatter():
     fig.update_layout(
         height=170,
         margin=dict(l=20, r=20, t=20, b=20),
-        plot_bgcolor='white'
+        plot_bgcolor='white',
+        xaxis_title='',
+        xaxis=dict(showticklabels=False),
     )
 
     return fig

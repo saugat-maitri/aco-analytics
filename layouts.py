@@ -101,8 +101,13 @@ def create_layout():
                             html.H5("Cost Drivers Analysis", className="text-teal-blue"),
                             dbc.Tabs([
                                 dbc.Tab(dcc.Graph(id='cost-drivers-graph', figure=cost_drivers_bar()), label="Encounter Type"),
-                                dbc.Tab(label="Condition (CCSR)"),  # Placeholder
-                                dbc.Tab(label="Provider Specialty"),  # Placeholder
+                                dbc.Tab(
+                                    html.Div(
+                                        id="condition-ccsr-cost-driver",
+                                    ),
+                                    label="Condition (CCSR)"
+                                ),
+                                dbc.Tab(label="Provider Specialty"),
                             ])
                         ])
                     ])
