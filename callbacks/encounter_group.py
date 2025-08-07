@@ -45,7 +45,7 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         return result
         
     except Exception as e:
-        print(f"Error in get_condition_ccsr_data: {e}")
+        print(f"Error in get_pmpm_performance_vs_expected_data: {e}")
         return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
 
 @callback(
