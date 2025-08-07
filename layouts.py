@@ -103,7 +103,7 @@ def create_layout():
                                 dbc.Tab(dcc.Graph(id='cost-drivers-graph', figure=cost_drivers_bar()), label="Encounter Type"),
                                 dbc.Tab(
                                     html.Div(
-                                        id="condition-ccsr",
+                                        id="condition-ccsr-cost-driver",
                                     ),
                                     label="Condition (CCSR)"
                                 ),

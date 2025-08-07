@@ -4,7 +4,7 @@ import pandas as pd
 from functools import lru_cache
 from datetime import datetime
 
-from components import condition_ccsr_graph
+from components import condition_ccsr_cost_driver_graph
 from data.db_query import query_sqlite
 from utils import dt_to_yyyymm
 
@@ -53,11 +53,11 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         return pd.DataFrame(columns=['CCSR_CATEGORY_DESCRIPTION', 'total_paid', 'pmpm'])
 
 @callback(
-    Output("condition-ccsr", "children"),
-    Input("my-date-picker-range", "start_date"),
-    Input("my-date-picker-range", "end_date"),
+    Output("condition-ccsr-cost-driver", "children"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
 )
-def update_condition_ccsr(start_date, end_date):
+def update_condition_ccsr_cost_driver_graph(start_date, end_date):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
@@ -78,8 +78,8 @@ def update_condition_ccsr(start_date, end_date):
             'pmpm': 'PMPM'
         })
         
-        return condition_ccsr_graph(ccsr_data)
+        return condition_ccsr_cost_driver_graph(ccsr_data)
     
     except Exception as e:
-        print(f"Error in update_condition_ccsr: {e}")
+        print(f"Error in update_condition_ccsr_cost_driver_graph: {e}")
         return f"Error loading data: {str(e)}"

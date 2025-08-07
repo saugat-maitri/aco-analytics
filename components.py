@@ -129,7 +129,7 @@ def cost_drivers_bar():
     return fig
 
 
-def condition_ccsr_graph(data):
+def condition_ccsr_cost_driver_graph(data):
     # Handle None or empty data
     if data is None:
         return html.Div("No data available")

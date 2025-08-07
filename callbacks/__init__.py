@@ -1,3 +1,3 @@
 from .kpi import *
 from .trends import *
-from .condition import *
+from .ccsr_condition import *
