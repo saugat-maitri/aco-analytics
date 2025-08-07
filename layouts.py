@@ -107,7 +107,8 @@ def create_layout():
                                     ),
                                     label="Condition (CCSR)"
                                 ),
-                                dbc.Tab(label="Provider Specialty"),                            ])
+                                dbc.Tab(label="Provider Specialty"),
+                            ])
                         ])
                     ])
                 ], width=8),

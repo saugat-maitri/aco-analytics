@@ -122,6 +122,7 @@ def cost_drivers_bar():
 
     fig.update_layout(
         height=300,
+        yaxis=dict(autorange="reversed"),
         margin=dict(l=20, r=20, t=20, b=20),
         plot_bgcolor='white'
     )
@@ -138,7 +139,6 @@ def condition_ccsr_cost_driver_graph(data):
     def truncate_text(text, max_length=30):
         return text[:max_length] + '...' if len(text) > max_length else text
     
-    data = data.copy()
     data['TRUNCATED_CATEGORY'] = data['CCSR_CATEGORY_DESCRIPTION'].apply(
         lambda x: truncate_text(x, 30)
     )
@@ -150,9 +150,9 @@ def condition_ccsr_cost_driver_graph(data):
         marker_color='#64AFE0',
         text=[f"${v:,.0f}" for v in data['PMPM']],
         textposition='outside',
-        hovertemplate=('CCSR Category:  %{customdata}<br><br>PMPM:  %{text}<extra></extra>'),
+        hovertemplate=('CCSR Category:  %{customdata}<br>PMPM:  %{text}<extra></extra>'),
         customdata=data['CCSR_CATEGORY_DESCRIPTION'],
-        texttemplate=[f"${v:,.0f}" for v in data['PMPM']]
+        texttemplate="$%{x:,.0f}"
     ))
     
     # Calculate x-axis range with padding for text labels
