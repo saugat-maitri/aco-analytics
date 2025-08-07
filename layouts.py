@@ -72,7 +72,7 @@ def create_layout():
                     dbc.Card([
                         dbc.CardBody([
                             html.H5("PMPM Performance vs Expected by Encounter Group", className="mb-2 text-teal-blue"),
-                            dcc.Graph(id='pmpm-performance', figure=pmpm_vs_expected_bar(), style={"height": "270px"})
+                            dcc.Graph(id='pmpm-performance', style={"height": "270px"})
                         ])
                     ])
                 ], width=8),
