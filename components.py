@@ -56,51 +56,28 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     ])
 
 
-def pmpm_vs_expected_bar():
-    encounter_groups = ['inpatient', 'outpatient', 'office based', 'other']
-    differences = [445, 362, 179, 51]
-    colors = ['#ed3030' if val > 400 else '#428c8d' for val in differences]
+def pmpm_vs_expected_bar(data):
+    # This is just for demo purposes, will be updated
+    colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
 
     fig = go.Figure(go.Bar(
-        x=differences,
-        y=encounter_groups,
+        x=data["PMPM"],
+        y=data["ENCOUNTER_GROUP"],
         orientation='h',
         marker_color=colors,
-        text=[f"${abs(val)} {'▲' if val > 400 else '▼'}" for val in differences],
-        textposition='outside'
+        text=[f"${v:,.0f}" for v in data['PMPM']],
+        textposition='outside',
+        hovertemplate=('Encounter Group: %{customdata}<br>PMPM: %{text}<extra></extra>'),
+        customdata=data['ENCOUNTER_GROUP'],
+        texttemplate="$%{x:,.0f}"
     ))
 
     fig.update_layout(
-        margin=dict(l=20, r=20, t=20, b=20),
+        margin=dict(l=20, r=20, t=20, b=0),
         yaxis=dict(autorange="reversed"),
-        plot_bgcolor='white'
-    )
-    return fig
-
-def line_chart(title):
-    import numpy as np
-    import pandas as pd
-
-    # Mock data
-    dates = pd.date_range(start='2022-01-01', periods=36, freq='ME')
-    values = np.random.randint(800, 1200, size=36)
-
-    fig = go.Figure(go.Scatter(
-        x=dates,
-        y=values,
-        mode='lines',
-        line=dict(color='#64b0e1')
-    ))
-
-    fig.update_layout(
-        # title=title,
-        margin=dict(l=20, r=20, t=0, b=20),
-        plot_bgcolor='white',
-        height=100,
-        xaxis_title='',
         xaxis=dict(showticklabels=False),
+        plot_bgcolor='white',
     )
-
     return fig
 
 def cost_drivers_bar():
