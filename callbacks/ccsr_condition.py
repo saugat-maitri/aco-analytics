@@ -1,14 +1,12 @@
 
 from dash import Input, Output, callback
 import pandas as pd
-from functools import lru_cache
 from datetime import datetime
 
 from components import condition_ccsr_cost_driver_graph
 from data.db_query import query_sqlite
 from utils import dt_to_yyyymm
 
-@lru_cache(maxsize=10)
 def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
     """Load condition CCSR data using efficient CTE-based query."""
     try:
