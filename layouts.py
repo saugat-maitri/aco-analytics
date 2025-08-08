@@ -91,7 +91,7 @@ def create_layout():
                         className="my-2",
                     ),
                 ],
-                className="d-flex justify-content-between my-1",
+                className="my-1 top-bar",
             ),
             html.Div(
                 [
