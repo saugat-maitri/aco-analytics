@@ -51,7 +51,7 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         return pd.DataFrame(columns=['CCSR_CATEGORY_DESCRIPTION', 'TOTAL_PAID', 'PMPM'])
 
 @callback(
-    Output("condition-ccsr-cost-driver", "children"),
+    Output("condition-ccsr-cost-driver", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
 )
