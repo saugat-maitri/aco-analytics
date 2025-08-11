@@ -166,24 +166,24 @@ def condition_ccsr_cost_driver_graph(data):
 def demographics_card():
     return dbc.Card([
         dbc.CardBody([
-            html.H5("Demographics", className="text-teal-blue"),
+            html.H5("Demographics", className="text-teal-blue mb-3"),
             html.P([
                 html.Span("Monthly Enrollment:"),
                 html.Span("7,823")
-            ], className="d-flex justify-content-between"),
+            ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("Average Age:"),
                 html.Span("73.55")
-            ], className="d-flex justify-content-between"),
+            ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("% Female:"),
                 html.Span("53.5%")
-            ], className="d-flex justify-content-between"),
+            ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("Average Risk:"),
                 html.Span("53.5%")
-            ], className="d-flex justify-content-between"),
-        ])
+            ], className="d-flex justify-content-between mb-0"),
+        ], className="h-100")
     ], style={"font-size": "14px"})
 
 

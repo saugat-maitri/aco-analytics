@@ -20,7 +20,7 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
             WHERE fc.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             GROUP BY fc.CCSR_CATEGORY_DESCRIPTION
         ),
-        member_months_claims AS (
+        member_months AS (
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS member_months_count
             FROM FACT_MEMBER_MONTHS 
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
