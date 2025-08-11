@@ -105,7 +105,7 @@ def create_layout():
                                         ),
                                         style={"overflowY": "auto", "maxHeight": "400px"}
                                     ),
-                                    label="Encounter Type)"
+                                    label="Encounter Type"
                                 ),
                                 dbc.Tab(
                                     html.Div(

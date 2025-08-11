@@ -93,7 +93,6 @@ def encounter_type_pmpm_bar(data):
         textposition='outside',
         hovertemplate=('Encounter Type: %{customdata}<br>PMPM: %{text}<extra></extra>'),
         customdata=data['ENCOUNTER_TYPE'],
-        texttemplate="$%{x:,.0f}"
     ))
 
     fig.update_layout(
@@ -104,7 +103,7 @@ def encounter_type_pmpm_bar(data):
         plot_bgcolor='white',
         autosize=True
     )
-    
+
     return fig
 
 
@@ -130,7 +129,6 @@ def condition_ccsr_cost_driver_graph(data):
         textposition='outside',
         hovertemplate=('CCSR Category:  %{customdata}<br>PMPM:  %{text}<extra></extra>'),
         customdata=data['CCSR_CATEGORY_DESCRIPTION'],
-        texttemplate="$%{x:,.0f}"
     ))
     
     # Calculate x-axis range with padding for text labels
