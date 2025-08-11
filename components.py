@@ -80,30 +80,31 @@ def pmpm_vs_expected_bar(data):
     )
     return fig
 
-def cost_drivers_bar():
-    categories = [
-        "acute inpatient", "outpatient surgery", "inpatient skilled nursing", "office visit surgery",
-        "outpatient hospital or clinic", "home health", "office visit", "emergency department",
-        "outpatient hospice", "office visit injections", "outpatient injections", "dialysis"
-    ]
-    values = [368, 97, 75, 60, 53, 47, 45, 42, 34, 33, 26, 26]
+def encounter_type_pmpm_bar(data):
+    # This is just for demo purposes, will be updated
+    colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
 
     fig = go.Figure(go.Bar(
-        x=values,
-        y=categories,
+        x=data["PMPM"],
+        y=data["ENCOUNTER_TYPE"],
         orientation='h',
-        marker_color=['#ed3030' if v > 60 else '#428c8d' for v in values],
-        text=[f"${v}" for v in values],
-        textposition='outside'
+        marker_color=colors,
+        text=[f"${v:,.0f}" for v in data['PMPM']],
+        textposition='outside',
+        hovertemplate=('Encounter Type: %{customdata}<br>PMPM: %{text}<extra></extra>'),
+        customdata=data['ENCOUNTER_TYPE'],
+        texttemplate="$%{x:,.0f}"
     ))
 
     fig.update_layout(
-        height=300,
+        height=max(300, 20 * len(data)),
+        margin=dict(l=20, r=20, t=20, b=0),
         yaxis=dict(autorange="reversed"),
-        margin=dict(l=20, r=20, t=20, b=20),
-        plot_bgcolor='white'
+        xaxis=dict(showticklabels=False),
+        plot_bgcolor='white',
+        autosize=True
     )
-
+    
     return fig
 
 
@@ -155,13 +156,7 @@ def condition_ccsr_cost_driver_graph(data):
         autosize=True
     )
 
-    return html.Div(
-        dcc.Graph(
-            figure=fig, 
-            config={"displayModeBar": False},
-            style={"width": "100%", "height": "100%"}
-        )
-    )
+    return fig
 
 def demographics_card():
     return dbc.Card([

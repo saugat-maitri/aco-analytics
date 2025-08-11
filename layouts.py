@@ -4,8 +4,6 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 from components import (
-    pmpm_vs_expected_bar,
-    cost_drivers_bar,
     demographics_card,
     risk_distribution_scatter
 )
@@ -100,10 +98,21 @@ def create_layout():
                         dbc.CardBody([
                             html.H5("Cost Drivers Analysis", className="text-teal-blue"),
                             dbc.Tabs([
-                                dbc.Tab(dcc.Graph(id='cost-drivers-graph', figure=cost_drivers_bar()), label="Encounter Type"),
                                 dbc.Tab(
                                     html.Div(
-                                        id="condition-ccsr-cost-driver",
+                                        dcc.Graph(
+                                            id="encounter-type-bar",
+                                        ),
+                                        style={"overflowY": "auto", "maxHeight": "400px"}
+                                    ),
+                                    label="Encounter Type)"
+                                ),
+                                dbc.Tab(
+                                    html.Div(
+                                        dcc.Graph(
+                                            id="condition-ccsr-cost-driver",
+                                        ),
+                                        style={"overflowY": "auto", "maxHeight": "400px"}
                                     ),
                                     label="Condition (CCSR)"
                                 ),
