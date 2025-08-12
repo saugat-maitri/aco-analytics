@@ -2,6 +2,8 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 import plotly.graph_objs as go
 
+from utils import fade_color
+
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     try:
         value_float = float(value)
@@ -56,9 +58,17 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     ])
 
 
-def pmpm_vs_expected_bar(data):
+def pmpm_vs_expected_bar(data, selected_group):
     # This is just for demo purposes, will be updated
-    colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
+    base_colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
+
+    if selected_group:
+        colors = [
+            c if group == selected_group else fade_color(c, 0.2)
+            for c, group in zip(base_colors, data["ENCOUNTER_GROUP"])
+        ]
+    else:
+        colors = base_colors
 
     fig = go.Figure(go.Bar(
         x=data["PMPM"],
