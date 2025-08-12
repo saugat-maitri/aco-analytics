@@ -2,8 +2,11 @@ import dash
 import dash_bootstrap_components as dbc
 
 from data.data_loader import initialize_sqlite
-from layouts import create_layout
 from constants import sqlite_path
+
+initialize_sqlite(sqlite_path)  # Initialize SQLite database with Snowflake data
+
+from layouts import create_layout
 import callbacks  # Import callbacks to register them with the app
 
 app = dash.Dash(
@@ -15,7 +18,6 @@ app = dash.Dash(
 )
 
 # Initialize SQLite database connection on startup
-initialize_sqlite(sqlite_path)  # Initialize SQLite database with Snowflake data
 app.layout = create_layout()
 
 if __name__ == '__main__':
