@@ -19,4 +19,4 @@ initialize_sqlite(sqlite_path)  # Initialize SQLite database with Snowflake data
 app.layout = create_layout()
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)

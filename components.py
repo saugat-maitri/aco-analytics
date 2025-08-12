@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
-from dash import html, dcc
+from dash import html
 import plotly.graph_objs as go
+import plotly.express as px
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     try:
@@ -156,50 +157,52 @@ def condition_ccsr_cost_driver_graph(data):
 
     return fig
 
-def demographics_card():
+def demographics_card(data):   
+    # Extract scalar values from the data (handle both Series and DataFrame)
+    try:
+        total_member_months = int(data['TOTAL_MEMBER_MONTHS'].iloc[0])
+        avg_age = float(data['AVG_AGE'].iloc[0])
+        percent_female = float(data['PERCENT_FEMALE'].iloc[0])
+        avg_risk_score = float(data['AVG_RISK_SCORE'].iloc[0])
+    except Exception as e:
+        print(f"Error extracting demographics data: {e}")
+        total_member_months = 0
+        avg_age = 0.0
+        percent_female = 0.0
+        avg_risk_score = 0.0
+    
     return dbc.Card([
         dbc.CardBody([
             html.H5("Demographics", className="text-teal-blue mb-3"),
             html.P([
                 html.Span("Monthly Enrollment:"),
-                html.Span("7,823")
+                html.Span(f"{total_member_months:,}")
             ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("Average Age:"),
-                html.Span("73.55")
+                html.Span(f"{avg_age:.1f}")
             ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("% Female:"),
-                html.Span("53.5%")
+                html.Span(f"{percent_female:.1f}%")
             ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("Average Risk:"),
-                html.Span("53.5%")
+                html.Span(f"{avg_risk_score:.1f}")
             ], className="d-flex justify-content-between mb-0"),
         ], className="h-100")
     ], style={"font-size": "14px"})
 
 
-def risk_distribution_scatter():
-    import numpy as np
-
-    np.random.seed(0)
-    x = np.random.rand(500)
-    y = np.random.rand(500) * 10
-
-    fig = go.Figure(go.Scatter(
-        x=x,
-        y=y,
-        mode='markers',
-        marker=dict(symbol='diamond', color='deepskyblue', size=6, opacity=0.5)
-    ))
-
+def risk_distribution_card(data):    
+    # Create a simple box plot without title (since it's in the card header)
+    fig = px.box(data, x='NORMALIZED_RISK_SCORE', points="outliers")
+    
     fig.update_layout(
-        height=170,
-        margin=dict(l=20, r=20, t=20, b=20),
         plot_bgcolor='white',
-        xaxis_title='',
-        xaxis=dict(showticklabels=False),
+        showlegend=False,
+        yaxis_title="",
+        xaxis_title="",
     )
-
+    
     return fig

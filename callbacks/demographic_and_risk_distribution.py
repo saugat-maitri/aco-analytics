@@ -1,0 +1,120 @@
+from dash import Input, Output, callback
+import pandas as pd
+from datetime import datetime
+
+from components import demographics_card, risk_distribution_card
+from data.db_query import query_sqlite
+from utils import dt_to_yyyymm
+
+def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
+    try:
+        query = f"""
+        WITH joined_member_date AS (
+            SELECT 
+                f.PERSON_ID,
+                f.YEAR_MONTH,
+                d.SEX,
+                d.AGE,
+                f.NORMALIZED_RISK_SCORE,
+                CAST(f.PERSON_ID AS TEXT) || '-' || CAST(f.YEAR_MONTH AS TEXT) AS MEMBER_MONTH_ID
+            FROM FACT_MEMBER_MONTHS AS f
+            LEFT JOIN DIM_MEMBER AS d
+                ON f.PERSON_ID = d.PERSON_ID
+            WHERE f.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+        ),
+        member_month_counts AS (
+            SELECT
+                COUNT(DISTINCT MEMBER_MONTH_ID) AS TOTAL_MEMBER_MONTHS,
+                COUNT(DISTINCT YEAR_MONTH) AS TOTAL_MONTHS
+            FROM joined_member_date
+        )
+        SELECT 
+            mmc.TOTAL_MEMBER_MONTHS,
+            mmc.TOTAL_MEMBER_MONTHS * 1.0 / mmc.TOTAL_MONTHS AS AVG_MEMBERS_PER_MONTH,
+            AVG(jmd.AGE) AS AVG_AGE,
+            100.0 * SUM(CASE WHEN LOWER(jmd.SEX) = 'female' THEN 1 ELSE 0 END) 
+                / mmc.TOTAL_MEMBER_MONTHS AS PERCENT_FEMALE,
+            AVG(jmd.NORMALIZED_RISK_SCORE) AS AVG_RISK_SCORE
+        FROM joined_member_date jmd
+        CROSS JOIN member_month_counts mmc;
+        """
+        result = query_sqlite(query)
+        # Ensure we always return a DataFrame, even if empty
+        if result is None:
+            return pd.DataFrame(columns=['TOTAL_MEMBER_MONTHS', 'AVG_MEMBERS_PER_MONTH', 'AVG_AGE', 'PERCENT_FEMALE', 'AVG_RISK_SCORE'])
+
+        return result
+        
+    except Exception as e:
+        print(f"Error in get_demographic_data: {e}")
+        return pd.DataFrame(columns=['TOTAL_MEMBER_MONTHS', 'AVG_MEMBERS_PER_MONTH', 'AVG_AGE', 'PERCENT_FEMALE', 'AVG_RISK_SCORE'])
+    
+
+def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
+    try:
+        query = f"""
+                SELECT 
+                    NORMALIZED_RISK_SCORE
+                FROM fact_member_months 
+                WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+            """
+        result = query_sqlite(query)
+        print("data value")
+        # Ensure we always return a DataFrame, even if empty
+        if result is None:
+            return pd.DataFrame(columns=['NORMALIZED_RISK_SCORE'])
+
+        return result
+        
+    except Exception as e:
+        print(f"Error in get_demographic_data: {e}")
+        return pd.DataFrame(columns=['NORMALIZED_RISK_SCORE'])
+
+
+@callback(
+    Output("demographic-card", "children"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
+)
+def update_demographic_data(start_date, end_date):
+    try:
+        # Convert date strings to YYYYMM format for filtering
+        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+        
+        demographic_data = get_demographic_data(start_yyyymm, end_yyyymm)
+        
+        # Handle case where query returns None
+        if demographic_data is None or demographic_data.empty:
+            return "No data available for the selected period"
+        
+        risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
+        print("risk daa", risk_data)
+        return demographics_card(demographic_data)
+    
+    except Exception as e:
+        print(f"Error in update_demographic_data: {e}")
+        return f"Error loading data: {str(e)}"
+    
+@callback(
+    Output("risk-distribution-card", "figure"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
+)
+def update_risk_data(start_date, end_date):
+    try:
+        # Convert date strings to YYYYMM format for filtering
+        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+        
+        
+        # Handle case where query returns None
+        risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
+        if risk_data is None or risk_data.empty:
+            return "No data available for the selected period"
+                
+        return risk_distribution_card(risk_data)
+    
+    except Exception as e:
+        print(f"Error in update_risk_data: {e}")
+        return f"Error loading data: {str(e)}"

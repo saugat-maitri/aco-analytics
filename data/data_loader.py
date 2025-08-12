@@ -6,6 +6,7 @@ def initialize_sqlite(db_path: str):
     """Initialize SQLite database with data from Snowflake."""
     # Get Snowflake connection using the centralized connection manager
     print("Initializing SQLite database with Snowflake data...")
+    return
     snowflake_conn = get_snowflake_connection()
     sqlite_conn = sqlite3.connect(db_path)
 
