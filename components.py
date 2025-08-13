@@ -203,7 +203,7 @@ def risk_distribution_card(data):
         yaxis_title="",
         xaxis_title="",
         margin=dict(l=10, r=10, t=10, b=10),
-        height=220,
+        height=170,
     )
     # Clean up grid and axis lines for a cleaner look
     fig.update_xaxes(showgrid=False, visible=False)

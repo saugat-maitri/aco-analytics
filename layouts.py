@@ -186,7 +186,6 @@ def create_layout():
                                                 ),
                                                 dcc.Graph(
                                                     id="risk-distribution-card",
-                                                    style={"height": "200px"},
                                                 ),
                                             ]
                                         ),
