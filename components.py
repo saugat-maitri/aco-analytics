@@ -195,14 +195,17 @@ def demographics_card(data):
 
 
 def risk_distribution_card(data):    
-    # Create a simple box plot without title (since it's in the card header)
-    fig = px.box(data, x='NORMALIZED_RISK_SCORE', points="outliers")
-    
+    fig = px.box(data, y='NORMALIZED_RISK_SCORE', points="outliers")
+
     fig.update_layout(
         plot_bgcolor='white',
         showlegend=False,
         yaxis_title="",
         xaxis_title="",
+        margin=dict(l=10, r=10, t=10, b=10),
+        height=220,
     )
-    
+    # Clean up grid and axis lines for a cleaner look
+    fig.update_xaxes(showgrid=False, visible=False)
+    fig.update_yaxes(showgrid=True, zeroline=False, ticks="outside", showline=True, linewidth=1, linecolor="#ccc")
     return fig

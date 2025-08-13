@@ -14,9 +14,9 @@ app = dash.Dash(
     title="TUVA Health ACO Analytics"
 )
 
-# Initialize SQLite database connection on startup
-initialize_sqlite(sqlite_path)  # Initialize SQLite database with Snowflake data
+# Initialize SQLite database with Snowflake data
+initialize_sqlite(sqlite_path)
 app.layout = create_layout()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

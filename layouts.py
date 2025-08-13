@@ -2,19 +2,17 @@ from datetime import date
 import calendar
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-
 from utils import load_data
 
-claims_agg, _ = load_data()
-
-# Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
-years = sorted((claims_agg["YEAR_MONTH"] // 100).unique())
-last_year = years[-1]
-last_month = 12
-last_day = calendar.monthrange(last_year, last_month)[1]
-
-
 def create_layout():
+    claims_agg, _ = load_data()
+
+    # Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
+    years = sorted((claims_agg["YEAR_MONTH"] // 100).unique())
+    last_year = years[-1]
+    last_month = 12
+    last_day = calendar.monthrange(last_year, last_month)[1]
+
     return dbc.Container(
         [
             html.Div(
@@ -99,32 +97,12 @@ def create_layout():
                 [
                     dbc.Row(
                         [
-                            dbc.Col(id="pmpm-cost-card", md=4),
-                            dbc.Col(id='demographic-card', md=4),
-                            dbc.Col(
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        [
-                                            html.H5(
-                                                "Risk Distribution",
-                                                className="text-teal-blue text-nowrap",
-                                            ),
-                                            dcc.Graph(
-                                                id="risk-distribution-card",
-                                                style={"height": "115px"},
-                                            ),
-                                        ]
-                                    )
-                                ),
-                                md=4,
-                            ),
-                        ],
-                        className="mb-4",
-                    ),
-                    dbc.Row(
-                        [
                             dbc.Col(
                                 [
+                                    dbc.Row([
+                                        dbc.Col(id="pmpm-cost-card", width=6, className="mb-3"),
+                                        dbc.Col(id="demographic-card", width=6, className="mb-3"),
+                                    ]),
                                     dbc.Card(
                                         [
                                             dbc.CardBody(
@@ -139,53 +117,9 @@ def create_layout():
                                                     ),
                                                 ]
                                             )
-                                        ]
-                                    )
-                                ],
-                                width=8,
-                            ),
-                            dbc.Col(
-                                [
-                                    dbc.Stack(
-                                        [
-                                            dbc.Card(
-                                                [
-                                                    dbc.CardBody(
-                                                        [
-                                                            html.H5(
-                                                                "PMPM Trend",
-                                                                className="text-teal-blue",
-                                                            ),
-                                                            dcc.Graph(id="pmpm-trend"),
-                                                        ]
-                                                    )
-                                                ]
-                                            ),
-                                            dbc.Card(
-                                                [
-                                                    dbc.CardBody(
-                                                        [
-                                                            html.H5(
-                                                                "PKPY Trend",
-                                                                className="text-teal-blue",
-                                                            ),
-                                                            dcc.Graph(id="pkpy-trend"),
-                                                        ]
-                                                    )
-                                                ]
-                                            ),
                                         ],
-                                        gap=2,
-                                    )
-                                ],
-                                width=4,
-                            ),
-                        ]
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
+                                        className="mb-3"
+                                    ),
                                     dbc.Card(
                                         [
                                             dbc.CardBody(
@@ -237,14 +171,55 @@ def create_layout():
                                                 ]
                                             )
                                         ]
-                                    )
+                                    ),
                                 ],
                                 width=8,
                             ),
                             dbc.Col(
                                 [
+                                    dbc.Card(
+                                        dbc.CardBody(
+                                            [
+                                                html.H5(
+                                                    "Risk Distribution",
+                                                    className="text-teal-blue text-nowrap",
+                                                ),
+                                                dcc.Graph(
+                                                    id="risk-distribution-card",
+                                                    style={"height": "200px"},
+                                                ),
+                                            ]
+                                        ),
+                                        className="mb-3"
+                                    ),
                                     dbc.Stack(
                                         [
+                                            dbc.Card(
+                                                [
+                                                    dbc.CardBody(
+                                                        [
+                                                            html.H5(
+                                                                "PMPM Trend",
+                                                                className="text-teal-blue",
+                                                            ),
+                                                            dcc.Graph(id="pmpm-trend"),
+                                                        ]
+                                                    )
+                                                ]
+                                            ),
+                                            dbc.Card(
+                                                [
+                                                    dbc.CardBody(
+                                                        [
+                                                            html.H5(
+                                                                "PKPY Trend",
+                                                                className="text-teal-blue",
+                                                            ),
+                                                            dcc.Graph(id="pkpy-trend"),
+                                                        ]
+                                                    )
+                                                ]
+                                            ),
                                             dbc.Card(
                                                 [
                                                     dbc.CardBody(

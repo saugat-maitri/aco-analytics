@@ -59,7 +59,6 @@ def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFra
                 WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             """
         result = query_sqlite(query)
-        print("data value")
         # Ensure we always return a DataFrame, even if empty
         if result is None:
             return pd.DataFrame(columns=['NORMALIZED_RISK_SCORE'])
@@ -88,8 +87,6 @@ def update_demographic_data(start_date, end_date):
         if demographic_data is None or demographic_data.empty:
             return "No data available for the selected period"
         
-        risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
-        print("risk daa", risk_data)
         return demographics_card(demographic_data)
     
     except Exception as e:
