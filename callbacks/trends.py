@@ -8,7 +8,11 @@ from data.db_query import query_sqlite
 def get_comparison_offset(month, comparison_period):
     if comparison_period == "Previous Month":
         comp_start = comp_end = month - DateOffset(months=1)
-    elif comparison_period in ("Previous Year", "Same Period Last Year"):
+    elif comparison_period == "Previous Year":
+        prev_year = month.year - 1
+        comp_start = pd.Timestamp(prev_year, 1, 1)
+        comp_end = pd.Timestamp(prev_year, 12, 1)
+    elif comparison_period == "Same Period Last Year":
         comp_start = comp_end = month - DateOffset(years=1)
     elif comparison_period == "Previous Quarter":
         first_month = ((month.month - 1) // 3) * 3 + 1
@@ -28,16 +32,16 @@ def get_trends_data() -> pd.DataFrame:
             SELECT
                 clm.YEAR_MONTH,
                 SUM(clm.PAID_AMOUNT) AS TOTAL_PAID,
-                COUNT(DISTINCT clm.ENCOUNTER_ID) AS ENCOUNTERS,
-                COUNT(DISTINCT mm.PERSON_ID) AS MEMBERS,
+                COUNT(DISTINCT clm.ENCOUNTER_ID) AS ENCOUNTERS_COUNT,
+                COUNT(DISTINCT mm.PERSON_ID) AS MEMBERS_COUNT,
                 CASE WHEN COUNT(DISTINCT mm.PERSON_ID) > 0
-                    THEN SUM(clm.PAID_AMOUNT) * 1.0 / COUNT(DISTINCT mm.PERSON_ID)
+                    THEN SUM(clm.PAID_AMOUNT) / COUNT(DISTINCT mm.PERSON_ID)
                     ELSE 0 END AS PMPM,
                 CASE WHEN COUNT(DISTINCT mm.PERSON_ID) > 0
                     THEN (COUNT(DISTINCT clm.ENCOUNTER_ID) * 12000.0 / COUNT(DISTINCT mm.PERSON_ID))
                     ELSE 0 END AS PKPY,
                 CASE WHEN COUNT(DISTINCT clm.ENCOUNTER_ID) > 0
-                    THEN SUM(clm.PAID_AMOUNT) * 1.0 / COUNT(DISTINCT clm.ENCOUNTER_ID)
+                    THEN SUM(clm.PAID_AMOUNT) / COUNT(DISTINCT clm.ENCOUNTER_ID)
                     ELSE 0 END AS COST_PER_ENCOUNTER
             FROM FACT_CLAIMS clm
             JOIN FACT_MEMBER_MONTHS mm
@@ -46,18 +50,16 @@ def get_trends_data() -> pd.DataFrame:
             ORDER BY clm.YEAR_MONTH
             """
         result = query_sqlite(query)
-        if result is not None and not result.empty:
+        if not result.empty:
             result["YEAR_MONTH"] = pd.to_datetime(result["YEAR_MONTH"].astype(str), format="%Y%m")
-        # Ensure we always return a DataFrame, even if empty
-        if result is None:
-            return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS', 'MEMBERS', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
+        else:
+            return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS_COUNT', 'MEMBERS_COUNT', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
         
         return result
         
     except Exception as e:
         print(f"Error in get_trends_data: {e}")
-        return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS', 'MEMBERS', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
-
+        return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS_COUNT', 'MEMBERS_COUNT', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
 
 
 @callback(
@@ -83,7 +85,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
         comp_range = get_comparison_offset(month, comparison_period)
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
         total_paid = comp_df["TOTAL_PAID"].sum()
-        total_members = comp_df["MEMBERS"].sum()
+        total_members = comp_df["MEMBERS_COUNT"].sum()
         avg_pmpm = total_paid / total_members if total_members > 0 else 0
         comparison_data.append((month, avg_pmpm))
 
@@ -96,7 +98,6 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
     Input("comparison-period-dropdown", "value")
 )
 def update_pkpy_trend(start_date, end_date, comparison_period):
-    # Load and prepare data
     df = get_trends_data()
 
     start = pd.to_datetime(start_date).replace(day=1)
@@ -112,8 +113,8 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
     for month in selected_months:
         comp_range = get_comparison_offset(month, comparison_period)
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
-        total_encounters = comp_df["ENCOUNTERS"].sum()
-        total_members = comp_df["MEMBERS"].sum()
+        total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
+        total_members = comp_df["MEMBERS_COUNT"].sum()
         if total_members > 0:
             avg_pkpy = (total_encounters / total_members) * 12000
             comparison_data.append((month, avg_pkpy))
@@ -145,7 +146,7 @@ def update_cost_per_trend(start_date, end_date, comparison_period):
 
         if not comp_df.empty:
             total_paid = comp_df["TOTAL_PAID"].sum()
-            total_encounters = comp_df["ENCOUNTERS"].sum()
+            total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
             if total_encounters > 0:
                 avg_cost_per_encounter = total_paid / total_encounters
                 comparison_data.append((month, avg_cost_per_encounter))
