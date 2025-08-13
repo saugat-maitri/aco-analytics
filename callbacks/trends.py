@@ -50,13 +50,13 @@ def get_trends_data() -> pd.DataFrame:
             result["YEAR_MONTH"] = pd.to_datetime(result["YEAR_MONTH"].astype(str), format="%Y%m")
         # Ensure we always return a DataFrame, even if empty
         if result is None:
-            return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
+            return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS', 'MEMBERS', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
         
         return result
         
     except Exception as e:
-        print(f"Error in get_encounter_type_pmpm_data: {e}")
-        return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
+        print(f"Error in get_trends_data: {e}")
+        return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS', 'MEMBERS', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
 
 
 
@@ -106,7 +106,7 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
     current_data = []
     if not df.empty:
         current_df = df[df["YEAR_MONTH"].isin(selected_months)]
-        current_data = list(zip(current_df["YEAR_MONTH"], current_df["PMPM"]))
+        current_data = list(zip(current_df["YEAR_MONTH"], current_df["PKPY"]))
 
     comparison_data = []
     for month in selected_months:
