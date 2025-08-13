@@ -2,8 +2,8 @@ import dash
 import dash_bootstrap_components as dbc
 
 from data.data_loader import initialize_sqlite
-from layouts import create_layout
 from constants import sqlite_path
+from layouts import create_layout
 import callbacks  # Import callbacks to register them with the app
 
 app = dash.Dash(
