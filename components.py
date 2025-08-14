@@ -193,10 +193,11 @@ def trend_chart(current_data, comparison_data):
 def demographics_card(data):   
     # Extract scalar values from the data (handle both Series and DataFrame)
     try:
-        total_member_months = int(data['TOTAL_MEMBER_MONTHS'].iloc[0])
-        avg_age = float(data['AVG_AGE'].iloc[0])
-        percent_female = float(data['PERCENT_FEMALE'].iloc[0])
-        avg_risk_score = float(data['AVG_RISK_SCORE'].iloc[0])
+        demographic_data = data.iloc[0].to_dict()
+        total_member_months = int(demographic_data.get('TOTAL_MEMBER_MONTHS', 0))
+        avg_age = float(demographic_data.get('AVG_AGE', 0))
+        percent_female = float(demographic_data.get('PERCENT_FEMALE', 0))
+        avg_risk_score = float(demographic_data.get('AVG_RISK_SCORE', 0))
     except Exception as e:
         print(f"Error extracting demographics data: {e}")
         total_member_months = 0
@@ -227,7 +228,24 @@ def demographics_card(data):
     ], style={"font-size": "14px"})
 
 
-def risk_distribution_card(data):    
+def risk_distribution_card(data):   
+    box_height = 117 
+    if data is None or data.empty:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No data available for the selected period",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16)
+        )
+        fig.update_layout(
+            xaxis={'visible': False},
+            yaxis={'visible': False},
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=box_height,
+        )
+        return fig
+
     fig = px.box(data, y='NORMALIZED_RISK_SCORE', points="outliers")
 
     fig.update_layout(
@@ -236,7 +254,7 @@ def risk_distribution_card(data):
         yaxis_title="",
         xaxis_title="",
         margin=dict(l=10, r=10, t=10, b=10),
-        height=170,
+        height=box_height,
     )
     # Clean up grid and axis lines for a cleaner look
     fig.update_xaxes(showgrid=False, visible=False)
