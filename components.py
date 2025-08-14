@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html
 import plotly.graph_objs as go
+import plotly.express as px
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     try:
@@ -189,50 +190,73 @@ def trend_chart(current_data, comparison_data):
 
     return fig
 
-def demographics_card():
+def demographics_card(data):   
+    # Extract scalar values from the data (handle both Series and DataFrame)
+    try:
+        demographic_data = data.iloc[0].to_dict()
+        total_member_months = int(demographic_data.get('TOTAL_MEMBER_MONTHS', 0))
+        avg_age = float(demographic_data.get('AVG_AGE', 0))
+        percent_female = float(demographic_data.get('PERCENT_FEMALE', 0))
+        avg_risk_score = float(demographic_data.get('AVG_RISK_SCORE', 0))
+    except Exception as e:
+        print(f"Error extracting demographics data: {e}")
+        total_member_months = 0
+        avg_age = 0.0
+        percent_female = 0.0
+        avg_risk_score = 0.0
+    
     return dbc.Card([
         dbc.CardBody([
-            html.H5("Demographics", className="text-teal-blue"),
+            html.H5("Demographics", className="text-teal-blue mb-3"),
             html.P([
                 html.Span("Monthly Enrollment:"),
-                html.Span("7,823")
-            ], className="d-flex justify-content-between"),
+                html.Span(f"{total_member_months:,}")
+            ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("Average Age:"),
-                html.Span("73.55")
-            ], className="d-flex justify-content-between"),
+                html.Span(f"{avg_age:.1f}")
+            ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("% Female:"),
-                html.Span("53.5%")
-            ], className="d-flex justify-content-between"),
+                html.Span(f"{percent_female:.1f}%")
+            ], className="d-flex justify-content-between mb-2"),
             html.P([
                 html.Span("Average Risk:"),
-                html.Span("53.5%")
-            ], className="d-flex justify-content-between"),
-        ])
+                html.Span(f"{avg_risk_score:.1f}")
+            ], className="d-flex justify-content-between mb-0"),
+        ], className="h-100")
     ], style={"font-size": "14px"})
 
 
-def risk_distribution_scatter():
-    import numpy as np
+def risk_distribution_card(data):   
+    box_height = 117 
+    if data is None or data.empty:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No data available for the selected period",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16)
+        )
+        fig.update_layout(
+            xaxis={'visible': False},
+            yaxis={'visible': False},
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=box_height,
+        )
+        return fig
 
-    np.random.seed(0)
-    x = np.random.rand(500)
-    y = np.random.rand(500) * 10
-
-    fig = go.Figure(go.Scatter(
-        x=x,
-        y=y,
-        mode='markers',
-        marker=dict(symbol='diamond', color='deepskyblue', size=6, opacity=0.5)
-    ))
+    fig = px.box(data, y='NORMALIZED_RISK_SCORE', points="outliers")
 
     fig.update_layout(
-        height=170,
-        margin=dict(l=20, r=20, t=20, b=20),
         plot_bgcolor='white',
-        xaxis_title='',
-        xaxis=dict(showticklabels=False),
+        showlegend=False,
+        yaxis_title="",
+        xaxis_title="",
+        margin=dict(l=10, r=10, t=10, b=10),
+        height=box_height,
     )
-
+    # Clean up grid and axis lines for a cleaner look
+    fig.update_xaxes(showgrid=False, visible=False)
+    fig.update_yaxes(showgrid=True, zeroline=False, ticks="outside", showline=True, linewidth=1, linecolor="#ccc")
     return fig

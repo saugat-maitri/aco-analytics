@@ -3,9 +3,6 @@ import dash_bootstrap_components as dbc
 
 from data.data_loader import initialize_sqlite
 from constants import sqlite_path
-
-initialize_sqlite(sqlite_path)  # Initialize SQLite database with Snowflake data
-
 from layouts import create_layout
 import callbacks  # Import callbacks to register them with the app
 
@@ -17,7 +14,8 @@ app = dash.Dash(
     title="TUVA Health ACO Analytics"
 )
 
-# Initialize SQLite database connection on startup
+# Initialize SQLite database with Snowflake data
+initialize_sqlite(sqlite_path)
 app.layout = create_layout()
 
 if __name__ == '__main__':

@@ -38,3 +38,13 @@ p {
 #comparison-period-dropdown {
     font-size: 12px;
 }
+
+.top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
