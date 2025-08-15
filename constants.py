@@ -50,9 +50,18 @@ SELECT
 FROM DIM_ENCOUNTER_TYPE
 """
 
+dim_member = """
+SELECT 
+    PERSON_ID,
+    SEX,
+    AGE
+FROM DIM_MEMBER
+"""
+
 table_list = [
     {"table_name": "FACT_CLAIMS", "query": fact_claims_query},
     {"table_name": "FACT_MEMBER_MONTHS", "query": fact_member_months_query},
     {"table_name": "DIM_ENCOUNTER_GROUP", "query": dim_encounter_group_query},
     {"table_name": "DIM_ENCOUNTER_TYPE", "query": dim_encounter_type_query},
+    {"table_name": "DIM_MEMBER", "query": dim_member}
 ]

@@ -89,24 +89,17 @@ def calc_kpis(start_date, end_date, filters=None):
     encounters = result.iloc[0]["encounters"] or 0
     mm = result.iloc[0]["mm"] or 0
     pmpm = paid / mm if mm else 0
-    utilization = (encounters / mm * 12000) if mm else 0
-    cpe = paid / encounters if encounters else 0
-    return pmpm, utilization, cpe
-
+    return pmpm
 
 @callback(
     Output("comparison-pmpm", "children"),
-    Output("comparison-utilization", "children"),
-    Output("comparison-cost", "children"),
     Input("comparison-period-dropdown", "value")
 )
 def update_comparison_text(comparison_period):
-    return comparison_period, comparison_period, comparison_period
+    return comparison_period
 
 @callback(
     Output("pmpm-cost-card", "children"),
-    Output("utilization-card", "children"),
-    Output("cost-per-encounter-card", "children"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
@@ -122,8 +115,8 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_
     if type_click:
         filters["ENCOUNTER_TYPE"] = type_click["points"][0]["y"]
 
-    pmpm_main, util_main, cpe_main = calc_kpis(start_main, end_main, filters)
-    pmpm_comp, util_comp, cpe_comp = calc_kpis(start_comp, end_comp, filters)
+    pmpm_main = calc_kpis(start_main, end_main, filters)
+    pmpm_comp = calc_kpis(start_comp, end_comp, filters)
 
 
     # Comparison values (dummy for now)
@@ -131,6 +124,4 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_
     # Return dynamic cards
     return (
         kpi_card("PMPM Cost", pmpm_main, pmpm_comp, expected, "comparison-pmpm"),
-        kpi_card("Utilization (PKPY)", util_main, util_comp, expected, "comparison-utilization"),
-        kpi_card("Cost Per Encounter", cpe_main, cpe_comp, expected, "comparison-cost")
     )
