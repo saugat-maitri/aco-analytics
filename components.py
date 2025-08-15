@@ -2,7 +2,6 @@ import dash_bootstrap_components as dbc
 from dash import html
 import plotly.graph_objs as go
 
-from utils import fade_color
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     try:
@@ -58,17 +57,9 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     ])
 
 
-def pmpm_vs_expected_bar(data, selected_group):
+def pmpm_vs_expected_bar(data):
     # This is just for demo purposes, will be updated
-    base_colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
-
-    if selected_group:
-        colors = [
-            c if group == selected_group else fade_color(c, 0.2)
-            for c, group in zip(base_colors, data["ENCOUNTER_GROUP"])
-        ]
-    else:
-        colors = base_colors
+    colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
 
     fig = go.Figure(go.Bar(
         x=data["PMPM"],
@@ -87,6 +78,7 @@ def pmpm_vs_expected_bar(data, selected_group):
         yaxis=dict(autorange="reversed"),
         xaxis=dict(showticklabels=False),
         plot_bgcolor='white',
+        clickmode='event+select'
     )
     return fig
 
@@ -111,7 +103,8 @@ def encounter_type_pmpm_bar(data):
         yaxis=dict(autorange="reversed"),
         xaxis=dict(showticklabels=False),
         plot_bgcolor='white',
-        autosize=True
+        autosize=True,
+        clickmode='event+select'
     )
 
     return fig

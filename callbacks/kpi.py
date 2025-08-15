@@ -66,6 +66,8 @@ def calc_kpis(start_date, end_date, filters=None):
         FROM FACT_CLAIMS clm
         LEFT JOIN DIM_ENCOUNTER_GROUP grp
             ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+        LEFT JOIN DIM_ENCOUNTER_TYPE type
+            ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
         WHERE YEAR_MONTH BETWEEN {start_date} AND {end_date}
         {filter_sql}
     ),
@@ -108,14 +110,17 @@ def update_comparison_text(comparison_period):
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
-    Input("encounter-group-chart", "clickData"),
+    Input("encounter-group-chart", "selectedData"),
+    Input("encounter-type-chart", "selectedData"),
 )
-def update_kpi_cards(start_date, end_date, comparison_period, group_click):
+def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_click):
     start_main, end_main, start_comp, end_comp = get_comparison_period(start_date, end_date, comparison_period)
 
     filters = {}
     if group_click:
         filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+    if type_click:
+        filters["ENCOUNTER_TYPE"] = type_click["points"][0]["y"]
 
     pmpm_main, util_main, cpe_main = calc_kpis(start_main, end_main, filters)
     pmpm_comp, util_comp, cpe_comp = calc_kpis(start_comp, end_comp, filters)

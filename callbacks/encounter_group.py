@@ -52,9 +52,8 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
     Output("encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "clickData"),
 )
-def update_pmpm_performance_vs_expected(start_date, end_date, clickData):
+def update_pmpm_performance_vs_expected(start_date, end_date):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
@@ -62,15 +61,11 @@ def update_pmpm_performance_vs_expected(start_date, end_date, clickData):
         
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
 
-        selected_group = None
-        if clickData and "points" in clickData and clickData["points"]:
-            selected_group = clickData["points"][0]["y"]
-        
         # Handle case where query returns None
         if data is None or data.empty:
             return "No data available for the selected period"
         
-        return pmpm_vs_expected_bar(data, selected_group)
+        return pmpm_vs_expected_bar(data)
     
     except Exception as e:
         print(f"Error in update_pmpm_performance_vs_expected: {e}")

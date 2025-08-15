@@ -57,10 +57,10 @@ def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFr
         return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
 
 @callback(
-    Output("encounter-type-bar", "figure"),
+    Output("encounter-type-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "clickData"),
+    Input("encounter-group-chart", "selectedData"),
 )
 def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
     try:

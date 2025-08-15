@@ -101,7 +101,7 @@ def create_layout():
                                 dbc.Tab(
                                     html.Div(
                                         dcc.Graph(
-                                            id="encounter-type-bar",
+                                            id="encounter-type-chart",
                                         ),
                                         style={"overflowY": "auto", "maxHeight": "400px"}
                                     ),
