@@ -26,9 +26,17 @@ def get_comparison_offset(month, comparison_period):
         return pd.DatetimeIndex([])
     return pd.date_range(start=comp_start, end=comp_end, freq='MS')
 
-def get_trends_data() -> pd.DataFrame:
+def get_trends_data(filters) -> pd.DataFrame:
+    filter_sql = ""
+    if filters:
+        filter_clauses = []
+        for col, value in filters.items():
+            if value is not None:
+                filter_clauses.append(f"{col} = '{value}'")
+        if filter_clauses:
+            filter_sql = " WHERE " + " AND ".join(filter_clauses)
     try:
-        query = """
+        query = f"""
             SELECT
                 clm.YEAR_MONTH,
                 SUM(clm.PAID_AMOUNT) AS TOTAL_PAID,
@@ -46,6 +54,9 @@ def get_trends_data() -> pd.DataFrame:
             FROM FACT_CLAIMS clm
             JOIN FACT_MEMBER_MONTHS mm
                 ON clm.YEAR_MONTH = mm.YEAR_MONTH
+            LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+            {filter_sql}
             GROUP BY clm.YEAR_MONTH
             ORDER BY clm.YEAR_MONTH
             """
@@ -66,10 +77,16 @@ def get_trends_data() -> pd.DataFrame:
     Output("pmpm-trend", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value")
+    Input("comparison-period-dropdown", "value"),
+    Input("encounter-group-chart", "selectedData"),
+
 )
-def update_pmpm_trend(start_date, end_date, comparison_period):
-    df = get_trends_data()
+def update_pmpm_trend(start_date, end_date, comparison_period, group_click):
+    filters = {}
+    if group_click:
+        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+
+    df = get_trends_data(filters)
 
     start = pd.to_datetime(start_date).replace(day=1)
     end = pd.to_datetime(end_date).replace(day=1)
@@ -95,10 +112,15 @@ def update_pmpm_trend(start_date, end_date, comparison_period):
     Output("pkpy-trend", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value")
+    Input("comparison-period-dropdown", "value"),
+    Input("encounter-group-chart", "selectedData"),
 )
-def update_pkpy_trend(start_date, end_date, comparison_period):
-    df = get_trends_data()
+def update_pkpy_trend(start_date, end_date, comparison_period, group_click):
+    filters = {}
+    if group_click:
+        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+
+    df = get_trends_data(filters)
 
     start = pd.to_datetime(start_date).replace(day=1)
     end = pd.to_datetime(end_date).replace(day=1)
@@ -125,10 +147,15 @@ def update_pkpy_trend(start_date, end_date, comparison_period):
     Output("cost-per-trend", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value")
+    Input("comparison-period-dropdown", "value"),
+    Input("encounter-group-chart", "selectedData"),
 )
-def update_cost_per_trend(start_date, end_date, comparison_period):
-    df = get_trends_data()
+def update_cost_per_trend(start_date, end_date, comparison_period, group_click):
+    filters = {}
+    if group_click:
+        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+
+    df = get_trends_data(filters)
 
     start = pd.to_datetime(start_date).replace(day=1)
     end = pd.to_datetime(end_date).replace(day=1)

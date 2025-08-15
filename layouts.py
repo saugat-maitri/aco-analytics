@@ -112,7 +112,7 @@ def create_layout():
                                                         className="mb-2 text-teal-blue",
                                                     ),
                                                     dcc.Graph(
-                                                        id="pmpm-performance",
+                                                        id="encounter-group-chart",
                                                         style={"height": "270px"},
                                                     ),
                                                 ]
@@ -133,7 +133,7 @@ def create_layout():
                                                             dbc.Tab(
                                                                 html.Div(
                                                                     dcc.Graph(
-                                                                        id="encounter-type-bar",
+                                                                        id="encounter-type-chart",
                                                                     ),
                                                                     style={
                                                                         "overflowY": "auto",

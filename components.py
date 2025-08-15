@@ -3,6 +3,7 @@ from dash import html
 import plotly.graph_objs as go
 import plotly.express as px
 
+
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     try:
         value_float = float(value)
@@ -78,6 +79,7 @@ def pmpm_vs_expected_bar(data):
         yaxis=dict(autorange="reversed"),
         xaxis=dict(showticklabels=False),
         plot_bgcolor='white',
+        clickmode='event+select'
     )
     return fig
 
@@ -102,7 +104,8 @@ def encounter_type_pmpm_bar(data):
         yaxis=dict(autorange="reversed"),
         xaxis=dict(showticklabels=False),
         plot_bgcolor='white',
-        autosize=True
+        autosize=True,
+        clickmode='event+select'
     )
 
     return fig

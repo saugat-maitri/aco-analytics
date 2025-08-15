@@ -3,11 +3,16 @@ from dash import Input, Output, callback
 import pandas as pd
 from datetime import datetime
 
-from components import encounter_type_pmpm_bar, pmpm_vs_expected_bar
+from components import encounter_type_pmpm_bar
 from data.db_query import query_sqlite
 from utils import dt_to_yyyymm
 
-def get_encounter_type_pmpm_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
+def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
+    filter_sql = ""
+    if filters:
+        for col, value in filters.items():
+            if value is not None:
+                filter_sql += f" AND {col} = '{value}'"
     try:
         query = f"""
         WITH claims_by_encounter_type AS (
@@ -17,7 +22,10 @@ def get_encounter_type_pmpm_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataF
             FROM FACT_CLAIMS clm
             LEFT JOIN DIM_ENCOUNTER_TYPE typ
                 ON clm.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
+            LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+            {filter_sql}
             GROUP BY typ.ENCOUNTER_TYPE
         ),
         member_months AS (
@@ -49,17 +57,22 @@ def get_encounter_type_pmpm_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataF
         return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
 
 @callback(
-    Output("encounter-type-bar", "figure"),
+    Output("encounter-type-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("encounter-group-chart", "selectedData"),
 )
-def update_encounter_type_pmpm_bar(start_date, end_date):
+def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+
+        filters = {}
+        if group_click:
+            filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
         
-        data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm)
+        data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
         
         # Handle case where query returns None
         if data is None or data.empty:

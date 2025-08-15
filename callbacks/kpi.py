@@ -2,7 +2,8 @@
 from dash import Input, Output, callback
 
 from components import kpi_card
-from utils import dt_to_yyyymm, load_data
+from data.db_query import query_sqlite
+from utils import dt_to_yyyymm
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -47,16 +48,46 @@ def get_comparison_period(start_date_str, end_date_str, comparison_period):
 
     return start, end, comp_start, comp_end
 
-def calc_kpis(start_date, end_date):
-    claims_agg, member_months = load_data()
+def calc_kpis(start_date, end_date, filters=None):
     start_date = dt_to_yyyymm(start_date)
     end_date = dt_to_yyyymm(end_date)
 
-    claims_agg_df = claims_agg[(claims_agg["YEAR_MONTH"] >= start_date) & (claims_agg["YEAR_MONTH"] <= end_date)]
-    member_months_df = member_months[(member_months["YEAR_MONTH"] >= start_date) & (member_months["YEAR_MONTH"] <= end_date)]
+    filter_sql = ""
+    if filters:
+        for col, value in filters.items():
+            if value is not None:
+                filter_sql += f" AND {col} = '{value}'"
 
-    mm = member_months_df[["PERSON_ID", "YEAR_MONTH"]].drop_duplicates().shape[0]
-    paid = claims_agg_df["PAID_AMOUNT"].sum()
+    query = f"""
+    WITH claims_agg AS (
+        SELECT
+            SUM(PAID_AMOUNT) AS paid,
+            COUNT(DISTINCT ENCOUNTER_ID) AS encounters
+        FROM FACT_CLAIMS clm
+        LEFT JOIN DIM_ENCOUNTER_GROUP grp
+            ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+        LEFT JOIN DIM_ENCOUNTER_TYPE type
+            ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
+        WHERE YEAR_MONTH BETWEEN {start_date} AND {end_date}
+        {filter_sql}
+    ),
+    member_months AS (
+        SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS mm
+        FROM FACT_MEMBER_MONTHS
+        WHERE YEAR_MONTH BETWEEN {start_date} AND {end_date}
+    )
+    SELECT
+        claims_agg.paid,
+        claims_agg.encounters,
+        member_months.mm
+    FROM claims_agg, member_months
+    """
+    result = query_sqlite(query)
+    if result is None or result.empty:
+        return 0, 0, 0
+    paid = result.iloc[0]["paid"] or 0
+    encounters = result.iloc[0]["encounters"] or 0
+    mm = result.iloc[0]["mm"] or 0
     pmpm = paid / mm if mm else 0
     return pmpm
 
@@ -71,13 +102,22 @@ def update_comparison_text(comparison_period):
     Output("pmpm-cost-card", "children"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value")
+    Input("comparison-period-dropdown", "value"),
+    Input("encounter-group-chart", "selectedData"),
+    Input("encounter-type-chart", "selectedData"),
 )
-def update_kpi_cards(start_date, end_date, comparison_period):
+def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_click):
     start_main, end_main, start_comp, end_comp = get_comparison_period(start_date, end_date, comparison_period)
 
-    pmpm_main = calc_kpis(start_main, end_main)
-    pmpm_comp = calc_kpis(start_comp, end_comp)
+    filters = {}
+    if group_click:
+        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+    if type_click:
+        filters["ENCOUNTER_TYPE"] = type_click["points"][0]["y"]
+
+    pmpm_main = calc_kpis(start_main, end_main, filters)
+    pmpm_comp = calc_kpis(start_comp, end_comp, filters)
+
 
     # Comparison values (dummy for now)
     expected = 300

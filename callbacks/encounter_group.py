@@ -49,7 +49,7 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
 
 @callback(
-    Output("pmpm-performance", "figure"),
+    Output("encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
 )
@@ -60,7 +60,7 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
         
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
-        
+
         # Handle case where query returns None
         if data is None or data.empty:
             return "No data available for the selected period"
