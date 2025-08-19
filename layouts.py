@@ -152,7 +152,7 @@ def create_layout():
                                                                         "maxHeight": "400px",
                                                                     },
                                                                 ),
-                                                                label="Condition CCSR Cost Driver",
+                                                                label="Condition (CCSR)",
                                                             ),
                                                             dbc.Tab(
                                                                 html.Div(

@@ -5,7 +5,7 @@ from pandas import DateOffset
 from components import trend_chart
 from data.db_query import query_sqlite
 
-def get_comparison_offset(month, comparison_period):
+def get_comparison_offset(month, comparison_period, selected_months=None):
     if comparison_period == "Previous Month":
         comp_start = comp_end = month - DateOffset(months=1)
     elif comparison_period == "Previous Year":
@@ -14,6 +14,9 @@ def get_comparison_offset(month, comparison_period):
         comp_end = pd.Timestamp(prev_year, 12, 1)
     elif comparison_period == "Same Period Last Year":
         comp_start = comp_end = month - DateOffset(years=1)
+    elif comparison_period == "Previous Period" and selected_months is not None:
+        period_length = len(selected_months)
+        comp_start = comp_end = month - DateOffset(months=period_length)
     elif comparison_period == "Previous Quarter":
         first_month = ((month.month - 1) // 3) * 3 + 1
         start_of_quarter = pd.Timestamp(month.year, first_month, 1)
@@ -107,7 +110,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, enco
 
     comparison_data = []
     for month in selected_months:
-        comp_range = get_comparison_offset(month, comparison_period)
+        comp_range = get_comparison_offset(month, comparison_period, selected_months)
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
         total_paid = comp_df["TOTAL_PAID"].sum()
         total_members = comp_df["MEMBERS_COUNT"].sum()
@@ -145,7 +148,7 @@ def update_pkpy_trend(start_date, end_date, comparison_period, group_click, enco
 
     comparison_data = []
     for month in selected_months:
-        comp_range = get_comparison_offset(month, comparison_period)
+        comp_range = get_comparison_offset(month, comparison_period, selected_months)
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
         total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
         total_members = comp_df["MEMBERS_COUNT"].sum()
@@ -184,7 +187,7 @@ def update_cost_per_trend(start_date, end_date, comparison_period, group_click, 
 
     comparison_data = []
     for month in selected_months:
-        comp_range = get_comparison_offset(month, comparison_period)
+        comp_range = get_comparison_offset(month, comparison_period, selected_months)
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
 
         if not comp_df.empty:
