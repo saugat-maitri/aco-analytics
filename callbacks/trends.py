@@ -59,6 +59,8 @@ def get_trends_data(filters) -> pd.DataFrame:
                 ON clm.YEAR_MONTH = mm.YEAR_MONTH
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+            LEFT JOIN DIM_ENCOUNTER_TYPE type
+                ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
             {filter_sql}
             GROUP BY clm.YEAR_MONTH
             ORDER BY clm.YEAR_MONTH
@@ -82,12 +84,16 @@ def get_trends_data(filters) -> pd.DataFrame:
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
+    Input("encounter-type-chart", "selectedData"),
 
 )
-def update_pmpm_trend(start_date, end_date, comparison_period, group_click):
+def update_pmpm_trend(start_date, end_date, comparison_period, group_click, encounter_type_click):
     filters = {}
     if group_click:
         filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+    
+    if encounter_type_click:
+        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
 
     df = get_trends_data(filters)
 
@@ -117,11 +123,15 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click):
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
+    Input("encounter-type-chart", "selectedData"),
 )
-def update_pkpy_trend(start_date, end_date, comparison_period, group_click):
+def update_pkpy_trend(start_date, end_date, comparison_period, group_click, encounter_type_click):
     filters = {}
     if group_click:
         filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+ 
+    if encounter_type_click:
+        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
 
     df = get_trends_data(filters)
 
@@ -152,11 +162,15 @@ def update_pkpy_trend(start_date, end_date, comparison_period, group_click):
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
+    Input("encounter-type-chart", "selectedData"),
 )
-def update_cost_per_trend(start_date, end_date, comparison_period, group_click):
+def update_cost_per_trend(start_date, end_date, comparison_period, group_click, encounter_type_click):
     filters = {}
     if group_click:
         filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+ 
+    if encounter_type_click:
+        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
 
     df = get_trends_data(filters)
 
