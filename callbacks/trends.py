@@ -53,9 +53,7 @@ def get_trends_data(filters) -> pd.DataFrame:
                     ELSE 0 END AS PKPY,
                 CASE WHEN COUNT(DISTINCT clm.ENCOUNTER_ID) > 0
                     THEN SUM(clm.PAID_AMOUNT) / COUNT(DISTINCT clm.ENCOUNTER_ID)
-                    ELSE 0 END AS COST_PER_ENCOUNTER,
-                grp.ENCOUNTER_GROUP,
-                type.ENCOUNTER_TYPE
+                    ELSE 0 END AS COST_PER_ENCOUNTER
             FROM FACT_CLAIMS clm
             JOIN FACT_MEMBER_MONTHS mm
                 ON clm.YEAR_MONTH = mm.YEAR_MONTH
