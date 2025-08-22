@@ -3,7 +3,7 @@ from dash import Input, Output, callback
 
 from components import kpi_card
 from data.db_query import query_sqlite
-from utils import dt_to_yyyymm
+from utils import dt_to_yyyymm, extract_sql_filters
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -86,7 +86,6 @@ def calc_kpis(start_date, end_date, filters=None):
     if result is None or result.empty:
         return 0, 0, 0
     paid = result.iloc[0]["paid"] or 0
-    encounters = result.iloc[0]["encounters"] or 0
     mm = result.iloc[0]["mm"] or 0
     pmpm = paid / mm if mm else 0
     return pmpm
@@ -105,16 +104,12 @@ def update_comparison_text(comparison_period):
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
     Input("encounter-type-chart", "selectedData"),
+    Input("condition-ccsr-chart", "selectedData"),
 )
-def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_click):
+def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
     start_main, end_main, start_comp, end_comp = get_comparison_period(start_date, end_date, comparison_period)
 
-    filters = {}
-    if group_click:
-        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
-    if type_click:
-        filters["ENCOUNTER_TYPE"] = type_click["points"][0]["y"]
-
+    filters = extract_sql_filters(group_click, type_click, ccsr_click)
     pmpm_main = calc_kpis(start_main, end_main, filters)
     pmpm_comp = calc_kpis(start_comp, end_comp, filters)
 
