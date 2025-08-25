@@ -1,0 +1,6 @@
+ENCOUNTER_GROUP,ENCOUNTER_GROUP_SK
+inpatient,1
+office based,2
+other,3
+outpatient,4
+all groups,-1
