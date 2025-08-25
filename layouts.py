@@ -145,7 +145,7 @@ def create_layout():
                                                             dbc.Tab(
                                                                 html.Div(
                                                                     dcc.Graph(
-                                                                        id="condition-ccsr-cost-driver",
+                                                                        id="condition-ccsr-chart",
                                                                     ),
                                                                     style={
                                                                         "overflowY": "auto",

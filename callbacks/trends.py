@@ -4,6 +4,7 @@ from pandas import DateOffset
 
 from components import trend_chart
 from data.db_query import query_sqlite
+from utils import extract_sql_filters
 
 def get_comparison_offset(month, comparison_period, selected_months=None):
     if comparison_period == "Previous Month":
@@ -40,31 +41,49 @@ def get_trends_data(filters) -> pd.DataFrame:
             filter_sql = " WHERE " + " AND ".join(filter_clauses)
     try:
         query = f"""
-            SELECT
-                clm.YEAR_MONTH,
-                SUM(clm.PAID_AMOUNT) AS TOTAL_PAID,
-                COUNT(DISTINCT clm.ENCOUNTER_ID) AS ENCOUNTERS_COUNT,
-                COUNT(DISTINCT mm.PERSON_ID) AS MEMBERS_COUNT,
-                CASE WHEN COUNT(DISTINCT mm.PERSON_ID) > 0
-                    THEN SUM(clm.PAID_AMOUNT) / COUNT(DISTINCT mm.PERSON_ID)
+           WITH member_counts_by_month AS (
+                SELECT 
+                    YEAR_MONTH,
+                    COUNT(DISTINCT PERSON_ID) AS MEMBERS_COUNT
+                FROM FACT_MEMBER_MONTHS
+                GROUP BY YEAR_MONTH
+            ),
+            claim_aggregates_by_month AS (
+                SELECT 
+                    clm.YEAR_MONTH,
+                    COUNT(DISTINCT clm.ENCOUNTER_ID) AS ENCOUNTERS_COUNT,
+                SUM(clm.PAID_AMOUNT) AS TOTAL_PAID
+                FROM FACT_CLAIMS clm
+                LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                    ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+                LEFT JOIN DIM_ENCOUNTER_TYPE type
+                    ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
+                {filter_sql}
+                GROUP BY clm.YEAR_MONTH
+            )
+            SELECT 
+                m.YEAR_MONTH,
+                m.MEMBERS_COUNT,
+                e.ENCOUNTERS_COUNT,
+                e.TOTAL_PAID,
+
+                CASE WHEN m.MEMBERS_COUNT > 0
+                    THEN COALESCE(e.TOTAL_PAID, 0) / m.MEMBERS_COUNT
                     ELSE 0 END AS PMPM,
-                CASE WHEN COUNT(DISTINCT mm.PERSON_ID) > 0
-                    THEN (COUNT(DISTINCT clm.ENCOUNTER_ID) * 12000.0 / COUNT(DISTINCT mm.PERSON_ID))
+
+                CASE WHEN m.MEMBERS_COUNT > 0
+                    THEN COALESCE(e.ENCOUNTERS_COUNT, 0) * 12000 / m.MEMBERS_COUNT
                     ELSE 0 END AS PKPY,
-                CASE WHEN COUNT(DISTINCT clm.ENCOUNTER_ID) > 0
-                    THEN SUM(clm.PAID_AMOUNT) / COUNT(DISTINCT clm.ENCOUNTER_ID)
+
+                CASE WHEN e.ENCOUNTERS_COUNT > 0
+                    THEN COALESCE(e.TOTAL_PAID, 0) / e.ENCOUNTERS_COUNT
                     ELSE 0 END AS COST_PER_ENCOUNTER
-            FROM FACT_CLAIMS clm
-            JOIN FACT_MEMBER_MONTHS mm
-                ON clm.YEAR_MONTH = mm.YEAR_MONTH
-            LEFT JOIN DIM_ENCOUNTER_GROUP grp
-                ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
-            LEFT JOIN DIM_ENCOUNTER_TYPE type
-                ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
-            {filter_sql}
-            GROUP BY clm.YEAR_MONTH
-            ORDER BY clm.YEAR_MONTH
-            """
+
+            FROM member_counts_by_month m
+            LEFT JOIN claim_aggregates_by_month e
+                ON m.YEAR_MONTH = e.YEAR_MONTH
+            ORDER BY m.YEAR_MONTH;
+        """
         result = query_sqlite(query)
         if not result.empty:
             result["YEAR_MONTH"] = pd.to_datetime(result["YEAR_MONTH"].astype(str), format="%Y%m")
@@ -85,15 +104,10 @@ def get_trends_data(filters) -> pd.DataFrame:
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
     Input("encounter-type-chart", "selectedData"),
-
+    Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_trend(start_date, end_date, comparison_period, group_click, encounter_type_click):
-    filters = {}
-    if group_click:
-        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
-    
-    if encounter_type_click:
-        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
+def update_pmpm_trend(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+    filters = extract_sql_filters(group_click, type_click, ccsr_click)
 
     df = get_trends_data(filters)
 
@@ -112,6 +126,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, enco
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
         total_paid = comp_df["TOTAL_PAID"].sum()
         total_members = comp_df["MEMBERS_COUNT"].sum()
+
         avg_pmpm = total_paid / total_members if total_members > 0 else 0
         comparison_data.append((month, avg_pmpm))
 
@@ -124,14 +139,10 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, enco
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
     Input("encounter-type-chart", "selectedData"),
+    Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pkpy_trend(start_date, end_date, comparison_period, group_click, encounter_type_click):
-    filters = {}
-    if group_click:
-        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
- 
-    if encounter_type_click:
-        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
+def update_pkpy_trend(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+    filters = extract_sql_filters(group_click, type_click, ccsr_click)
 
     df = get_trends_data(filters)
 
@@ -150,9 +161,9 @@ def update_pkpy_trend(start_date, end_date, comparison_period, group_click, enco
         comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
         total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
         total_members = comp_df["MEMBERS_COUNT"].sum()
-        if total_members > 0:
-            avg_pkpy = (total_encounters / total_members) * 12000
-            comparison_data.append((month, avg_pkpy))
+
+        avg_pkpy = (total_encounters / total_members) * 12000 if total_members else 0
+        comparison_data.append((month, avg_pkpy))
 
     return trend_chart(current_data, comparison_data)
 
@@ -163,14 +174,10 @@ def update_pkpy_trend(start_date, end_date, comparison_period, group_click, enco
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
     Input("encounter-type-chart", "selectedData"),
+    Input("condition-ccsr-chart", "selectedData"),
 )
-def update_cost_per_trend(start_date, end_date, comparison_period, group_click, encounter_type_click):
-    filters = {}
-    if group_click:
-        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
- 
-    if encounter_type_click:
-        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
+def update_cost_per_trend(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+    filters = extract_sql_filters(group_click, type_click, ccsr_click)
 
     df = get_trends_data(filters)
 
@@ -182,7 +189,6 @@ def update_cost_per_trend(start_date, end_date, comparison_period, group_click, 
     if not df.empty:
         current_df = df[df["YEAR_MONTH"].isin(selected_months)]
         current_data = list(zip(current_df["YEAR_MONTH"], current_df["COST_PER_ENCOUNTER"]))
-
     comparison_data = []
     for month in selected_months:
         comp_range = get_comparison_offset(month, comparison_period, selected_months)
@@ -191,8 +197,8 @@ def update_cost_per_trend(start_date, end_date, comparison_period, group_click, 
         if not comp_df.empty:
             total_paid = comp_df["TOTAL_PAID"].sum()
             total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
-            if total_encounters > 0:
-                avg_cost_per_encounter = total_paid / total_encounters
-                comparison_data.append((month, avg_cost_per_encounter))
+            
+            avg_cost_per_encounter = total_paid / total_encounters if total_encounters else 0
+            comparison_data.append((month, avg_cost_per_encounter))
 
     return trend_chart(current_data, comparison_data)

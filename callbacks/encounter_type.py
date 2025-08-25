@@ -5,7 +5,7 @@ from datetime import datetime
 
 from components import encounter_type_pmpm_bar
 from data.db_query import query_sqlite
-from utils import dt_to_yyyymm
+from utils import dt_to_yyyymm, extract_sql_filters
 
 def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
     filter_sql = ""
@@ -68,9 +68,7 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
-        filters = {}
-        if group_click:
-            filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+        filters = extract_sql_filters(group_click)
         
         data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
         
