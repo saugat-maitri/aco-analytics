@@ -155,7 +155,8 @@ def condition_ccsr_cost_driver_graph(data):
         ),
         margin=dict(l=20, r=20, t=20, b=20),
         plot_bgcolor='white',
-        autosize=True
+        autosize=True,
+        clickmode='event+select'
     )
 
     return fig

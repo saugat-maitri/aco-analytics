@@ -17,3 +17,16 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     member_months["YEAR_MONTH"] = member_months["YEAR_MONTH"].astype(int)
 
     return claims_agg, member_months
+
+def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=None):
+    '''
+    Extract SQL filters from the selected data points.
+    '''
+    filters = {}
+    if group_click and group_click.get("points"):
+        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+    if encounter_type_click and encounter_type_click.get("points"):
+        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
+    if ccsr_click and ccsr_click.get("points"):
+        filters["CCSR_CATEGORY_DESCRIPTION"] = ccsr_click["points"][0]["customdata"]
+    return filters
