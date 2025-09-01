@@ -1,4 +1,4 @@
-sqlite_path = 'cache_database.db'  # Always end with .db extension
+sqlite_path = 'app_data.db'  # Always end with .db extension
 
 fact_claims_query = """
 SELECT 

@@ -1,10 +1,11 @@
-from dash import Input, Output, callback
 import pandas as pd
+from dash import Input, Output, callback
 from pandas import DateOffset
 
 from components import trend_chart
 from data.db_query import query_sqlite
 from utils import extract_sql_filters
+
 
 def get_comparison_offset(month, comparison_period, selected_months=None):
     if comparison_period == "Previous Month":

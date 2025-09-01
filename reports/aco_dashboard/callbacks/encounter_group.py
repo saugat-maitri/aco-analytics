@@ -1,32 +1,26 @@
 
-from dash import Input, Output, callback
-import pandas as pd
 from datetime import datetime
 
-from components import encounter_type_pmpm_bar
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm, extract_sql_filters
+import pandas as pd
+from dash import Input, Output, callback
 
-def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
-    filter_sql = ""
-    if filters:
-        for col, value in filters.items():
-            if value is not None:
-                filter_sql += f" AND {col} = '{value}'"
+from components import pmpm_vs_expected_bar
+from data.db_query import query_sqlite
+from utils import dt_to_yyyymm
+
+
+def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
     try:
         query = f"""
-        WITH claims_by_encounter_type AS (
+        WITH claims_by_encounter_group AS (
             SELECT
-                typ.ENCOUNTER_TYPE,
+                grp.ENCOUNTER_GROUP,
                 SUM(PAID_AMOUNT) as TOTAL_PAID
             FROM FACT_CLAIMS clm
-            LEFT JOIN DIM_ENCOUNTER_TYPE typ
-                ON clm.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
-            GROUP BY typ.ENCOUNTER_TYPE
+            GROUP BY grp.ENCOUNTER_GROUP
         ),
         member_months AS (
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS MEMBER_MONTHS_COUNT
@@ -35,49 +29,42 @@ def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFr
         )
 
         SELECT
-            clm.ENCOUNTER_TYPE,
+            clm.ENCOUNTER_GROUP,
             CASE 
                 WHEN mm.MEMBER_MONTHS_COUNT > 0 
                 THEN clm.TOTAL_PAID / mm.MEMBER_MONTHS_COUNT 
                 ELSE 0 
             END AS PMPM
-        FROM claims_by_encounter_type clm
+        FROM claims_by_encounter_group clm
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
         """
         result = query_sqlite(query)
         # Ensure we always return a DataFrame, even if empty
         if result is None:
-            return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
+            return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
         
         return result
         
     except Exception as e:
-        print(f"Error in get_encounter_type_pmpm_data: {e}")
-        return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
+        print(f"Error in get_pmpm_performance_vs_expected_data: {e}")
+        return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
 
 @callback(
-    Output("encounter-type-chart", "figure"),
+    Output("encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "selectedData"),
 )
-def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
+def update_pmpm_performance_vs_expected(start_date, end_date):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-
-        filters = extract_sql_filters(group_click)
         
-        data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
+        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
         
-        # Handle case where query returns None
-        if data is None or data.empty:
-            return "No data available for the selected period"
-        
-        return encounter_type_pmpm_bar(data)
+        return pmpm_vs_expected_bar(data)
     
     except Exception as e:
-        print(f"Error in update_encounter_type_pmpm_bar: {e}")
+        print(f"Error in update_pmpm_performance_vs_expected: {e}")
         return f"Error loading data: {str(e)}"

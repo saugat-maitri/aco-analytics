@@ -1,22 +1,30 @@
 import dash
 import dash_bootstrap_components as dbc
+from dash import html
 
-from data.data_loader import initialize_sqlite
+from components import navbar
 from constants import sqlite_path
-from layouts import create_layout
-import callbacks  # Import callbacks to register them with the app
+from data.data_loader import initialize_sqlite
 
 app = dash.Dash(
     __name__, 
     external_stylesheets=[dbc.themes.BOOTSTRAP], 
     suppress_callback_exceptions=True,
     assets_folder='assets',
-    title="TUVA Health ACO Analytics"
+    title="TUVA Health ACO Analytics",
+    use_pages=True,
+    pages_folder="reports"
 )
 
-# Initialize SQLite database with Snowflake data
-initialize_sqlite(sqlite_path)
-app.layout = create_layout()
+app.layout = html.Div(
+    [
+        navbar(),
+        dbc.Container(
+            [dash.page_container], fluid=True
+        ),
+    ]
+)
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    initialize_sqlite(sqlite_path)
+    app.run(debug=True)
