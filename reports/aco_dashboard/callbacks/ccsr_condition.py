@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
-from components import condition_ccsr_cost_driver_graph, no_data_figure
+from components import condition_ccsr_cost_driver_graph
 from data.db_query import query_sqlite
 from utils import dt_to_yyyymm
 

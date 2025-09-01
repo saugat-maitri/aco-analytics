@@ -1,5 +1,6 @@
 
 from datetime import datetime, timedelta
+from typing import Optional, Tuple
 
 from dash import Input, Output, callback
 from dateutil.relativedelta import relativedelta
@@ -9,7 +10,7 @@ from data.db_query import query_sqlite
 from utils import dt_to_yyyymm, extract_sql_filters
 
 
-def get_comparison_period(start: datetime, end: datetime, comparison_period: str) -> tuple[datetime, datetime]:
+def get_comparison_period(start: datetime, end: datetime, comparison_period: str) -> Tuple[datetime, datetime]:
     period_months = (end.year - start.year) * 12 + (end.month - start.month) + 1
 
     if comparison_period == "Same Period Last Year":
@@ -50,7 +51,7 @@ def get_comparison_period(start: datetime, end: datetime, comparison_period: str
 def calc_kpis(
     start_date: datetime,
     end_date: datetime,
-    filters: dict = None
+    filters: Optional[dict] = None 
 ) -> float:
     start_date = dt_to_yyyymm(start_date)
     end_date = dt_to_yyyymm(end_date)
