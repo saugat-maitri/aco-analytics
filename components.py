@@ -28,7 +28,7 @@ def no_data_figure(message="No data available for the selected period"):
     )
     return fig
 
-def navbar():
+def header():
     query = "SELECT DISTINCT(YEAR_MONTH) FROM FACT_CLAIMS"
     claims_agg = query_sqlite(query)
 
@@ -113,7 +113,7 @@ def navbar():
                         className="my-2",
                     ),
                 ],
-                className="my-1 top-bar",
+                className="my-1 header",
             )
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):

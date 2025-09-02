@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import dcc, html, register_page
 
-from .callbacks import callback
+from .callbacks import *
 
 register_page(
     module=__name__,

@@ -3,7 +3,7 @@
 [lint]
 # Add import sorting rules to defaults
 select = ["E4", "E7", "E9", "F", "I", "D"]
-ignore = ["D100", "D101", "D102", "D103", "D104", "D106", "D107"]
+ignore = ["D100", "D101", "D102", "D103", "D104", "D106", "D107", "F403"]
 
 [lint.pydocstyle]
 convention = "google"

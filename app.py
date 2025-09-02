@@ -2,7 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
-from components import navbar
+from components import header
 from constants import sqlite_path
 from data.data_loader import initialize_sqlite
 
@@ -18,7 +18,7 @@ app = dash.Dash(
 
 app.layout = html.Div(
     [
-        navbar(),
+        header(),
         dbc.Container(
             [dash.page_container], fluid=True
         ),
