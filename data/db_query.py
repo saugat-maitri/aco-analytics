@@ -1,6 +1,9 @@
 import sqlite3
+
 import pandas as pd
+
 from constants import sqlite_path
+
 
 def query_sqlite(sql_query: str) -> pd.DataFrame:
     conn = sqlite3.connect(sqlite_path)

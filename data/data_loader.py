@@ -1,9 +1,13 @@
-import sqlite3
 import os
-import pandas as pd
+import sqlite3
 from pathlib import Path
-from .db_manager import get_snowflake_connection
+
+import pandas as pd
+
 from constants import table_list
+
+from .db_manager import get_snowflake_connection
+
 
 def load_from_csv(sqlite_conn: sqlite3.Connection, csv_folder: str):
     """Load data from CSV files into SQLite database."""

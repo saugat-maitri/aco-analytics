@@ -1,7 +1,8 @@
 import os
+
 import snowflake.connector
-from flask import abort
 from dotenv import load_dotenv
+from flask import abort
 
 # Load environment variables from .env
 load_dotenv()

@@ -1,7 +1,10 @@
-import pandas as pd
 from functools import lru_cache
 from typing import Tuple
+
+import pandas as pd
+
 from data.db_query import query_sqlite
+
 
 def dt_to_yyyymm(dt):
     return dt.year * 100 + dt.month
@@ -19,9 +22,7 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     return claims_agg, member_months
 
 def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=None):
-    '''
-    Extract SQL filters from the selected data points.
-    '''
+    """Extract SQL filters from the selected data points."""
     filters = {}
     if group_click and group_click.get("points"):
         filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]

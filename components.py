@@ -1,8 +1,120 @@
-import dash_bootstrap_components as dbc
-from dash import html
-import plotly.graph_objs as go
-import plotly.express as px
+import calendar
+from datetime import date
 
+import dash_bootstrap_components as dbc
+import plotly.express as px
+import plotly.graph_objs as go
+from dash import dcc, html
+
+from data.db_query import query_sqlite
+
+
+def no_data_figure(message="No data available for the selected period"):
+    fig = go.Figure()
+    fig.add_annotation(
+        text=message,
+        xref="paper", yref="paper",
+        x=0.5, y=0.5,
+        showarrow=False,
+        font=dict(size=18, color="gray"),
+        align="center"
+    )
+    fig.update_layout(
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        margin=dict(l=0, r=0, t=40, b=0),
+    )
+    return fig
+
+def header():
+    query = "SELECT DISTINCT(YEAR_MONTH) FROM FACT_CLAIMS"
+    claims_agg = query_sqlite(query)
+
+    # Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
+    years = sorted((claims_agg["YEAR_MONTH"] // 100).unique())
+    last_year = years[-1]
+    last_month = 12
+    last_day = calendar.monthrange(last_year, last_month)[1]
+    return html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Img(
+                                src="assets/tuva_health_logo.png",
+                                width=220,
+                                className="me-2",
+                            ),
+                            html.H3(
+                                "| ACO Analytics",
+                                style={"color": "#1e7baa", "font-size": "24px"},
+                            ),
+                        ],
+                        className="d-flex align-items-center",
+                    ),
+                    html.Div(
+                        [
+                            dbc.Stack(
+                                [
+                                    html.Div(
+                                        [
+                                            html.P(
+                                                "Selected Period",
+                                                className="mb-1 fw-semibold text-teal-blue",
+                                                style={"font-size": "12px"},
+                                            ),
+                                            dcc.DatePickerRange(
+                                                id="date-picker-input",
+                                                min_date_allowed=date(years[0], 1, 1),
+                                                max_date_allowed=date(
+                                                    last_year, last_month, last_day
+                                                ),
+                                                end_date=date(
+                                                    last_year, last_month, last_day
+                                                ),
+                                                start_date=date(last_year, 1, 1),
+                                                style={"width": "195px"},
+                                            ),
+                                        ],
+                                        style={"flex": 1},
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.P(
+                                                "Comparison Period",
+                                                className="mb-1 fw-semibold text-teal-blue",
+                                                style={"font-size": "12px"},
+                                            ),
+                                            dcc.Dropdown(
+                                                value="Same Period Last Year",
+                                                id="comparison-period-dropdown",
+                                                options=[
+                                                    "Previous 18 Months",
+                                                    "Previous Month",
+                                                    "Previous Period",
+                                                    "Previous Quarter",
+                                                    "Previous Year",
+                                                    "Same Period Last Year",
+                                                ],
+                                                placeholder="Select a comparison period",
+                                                clearable=False,
+                                                style={"width": "195px"},
+                                            ),
+                                        ],
+                                        style={"flex": "auto"},
+                                    ),
+                                ],
+                                direction="horizontal",
+                                gap=2,
+                                style={"alignItems": "stretch"},
+                            ),
+                        ],
+                        className="my-2",
+                    ),
+                ],
+                className="my-1 header",
+            )
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     try:
@@ -59,6 +171,9 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
 
 
 def pmpm_vs_expected_bar(data):
+    if data is None or data.empty:
+        return no_data_figure()
+    
     # This is just for demo purposes, will be updated
     colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
 
@@ -84,6 +199,9 @@ def pmpm_vs_expected_bar(data):
     return fig
 
 def encounter_type_pmpm_bar(data):
+    if data is None or data.empty:
+        return no_data_figure()
+    
     # This is just for demo purposes, will be updated
     colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
 
@@ -113,9 +231,9 @@ def encounter_type_pmpm_bar(data):
 
 def condition_ccsr_cost_driver_graph(data):
     # Handle None or empty data
-    if data is None:
-        return html.Div("No data available")
-    
+    if data is None or data.empty:
+        return no_data_figure()
+
     # Truncate long category descriptions
     def truncate_text(text, max_length=30):
         return text[:max_length] + '...' if len(text) > max_length else text
@@ -199,9 +317,9 @@ def demographics_card(data):
     try:
         demographic_data = data.iloc[0].to_dict()
         total_member_months = int(demographic_data.get('TOTAL_MEMBER_MONTHS', 0))
-        avg_age = float(demographic_data.get('AVG_AGE', 0))
-        percent_female = float(demographic_data.get('PERCENT_FEMALE', 0))
-        avg_risk_score = float(demographic_data.get('AVG_RISK_SCORE', 0))
+        avg_age = demographic_data.get('AVG_AGE') or 0
+        percent_female = demographic_data.get('PERCENT_FEMALE') or 0
+        avg_risk_score = demographic_data.get('AVG_RISK_SCORE') or 0
     except Exception as e:
         print(f"Error extracting demographics data: {e}")
         total_member_months = 0
@@ -232,23 +350,10 @@ def demographics_card(data):
     ], style={"font-size": "14px"})
 
 
-def risk_distribution_card(data):   
-    box_height = 117 
+def risk_distribution_card(data):
+    box_height = 117
     if data is None or data.empty:
-        fig = go.Figure()
-        fig.add_annotation(
-            text="No data available for the selected period",
-            xref="paper", yref="paper",
-            x=0.5, y=0.5, showarrow=False,
-            font=dict(size=16)
-        )
-        fig.update_layout(
-            xaxis={'visible': False},
-            yaxis={'visible': False},
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=box_height,
-        )
-        return fig
+        return no_data_figure()
 
     fig = px.box(data, y='NORMALIZED_RISK_SCORE', points="outliers")
 

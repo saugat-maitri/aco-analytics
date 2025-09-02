@@ -1,10 +1,12 @@
-from dash import Input, Output, callback
-import pandas as pd
 from datetime import datetime
+
+import pandas as pd
+from dash import Input, Output, callback
 
 from components import demographics_card, risk_distribution_card
 from data.db_query import query_sqlite
 from utils import dt_to_yyyymm
+
 
 def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
     try:
@@ -99,9 +101,9 @@ def update_risk_data(start_date, end_date):
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
         
-        
         # Handle case where query returns None
         risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
+        
         return risk_distribution_card(risk_data)
     
     except Exception as e:
