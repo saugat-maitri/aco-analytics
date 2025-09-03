@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 from dash import dcc, html
 
-from data.db_query import query_sqlite
+from services.database import sqlite_manager
 
 
 def no_data_figure(message="No data available for the selected period"):
@@ -30,10 +30,10 @@ def no_data_figure(message="No data available for the selected period"):
 
 def header():
     query = "SELECT DISTINCT(YEAR_MONTH) FROM FACT_CLAIMS"
-    claims_agg = query_sqlite(query)
+    claims_agg = sqlite_manager.query(query)
 
     # Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
-    years = sorted((claims_agg["YEAR_MONTH"] // 100).unique())
+    years = sorted((claims_agg["YEAR_MONTH"].astype(int) // 100).unique())
     last_year = years[-1]
     last_month = 12
     last_day = calendar.monthrange(last_year, last_month)[1]

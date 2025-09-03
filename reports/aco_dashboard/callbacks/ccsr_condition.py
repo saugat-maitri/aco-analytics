@@ -5,8 +5,8 @@ import pandas as pd
 from dash import Input, Output, callback
 
 from components import condition_ccsr_cost_driver_graph
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm
+from services.database import sqlite_manager
+from services.utils import dt_to_yyyymm
 
 
 def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
@@ -40,7 +40,7 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         ORDER BY PMPM DESC
         """
         
-        result = query_sqlite(query)
+        result = sqlite_manager.query(query)
         
         # Ensure we always return a DataFrame, even if empty
         if result is None:

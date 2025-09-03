@@ -3,8 +3,8 @@ from dash import Input, Output, callback
 from pandas import DateOffset
 
 from components import trend_chart
-from data.db_query import query_sqlite
-from utils import extract_sql_filters
+from services.database import sqlite_manager
+from services.utils import extract_sql_filters
 
 
 def get_comparison_offset(month, comparison_period, selected_months=None):
@@ -85,7 +85,7 @@ def get_trends_data(filters) -> pd.DataFrame:
                 ON m.YEAR_MONTH = e.YEAR_MONTH
             ORDER BY m.YEAR_MONTH;
         """
-        result = query_sqlite(query)
+        result = sqlite_manager.query(query)
         if not result.empty:
             result["YEAR_MONTH"] = pd.to_datetime(result["YEAR_MONTH"].astype(str), format="%Y%m")
         else:
