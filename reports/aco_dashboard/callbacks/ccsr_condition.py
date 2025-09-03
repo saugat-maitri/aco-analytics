@@ -6,7 +6,6 @@ from dash import Input, Output, callback
 
 from components.graph import horizontal_bar_chart
 from data.db_query import query_sqlite
-from old_components import condition_ccsr_cost_driver_graph
 from utils import dt_to_yyyymm, truncate_text
 
 
