@@ -33,7 +33,7 @@ def header():
     claims_agg = query_sqlite(query)
 
     # Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
-    years = sorted((claims_agg["YEAR_MONTH"] // 100).unique())
+    years = sorted(((claims_agg["YEAR_MONTH"]).astype(int) // 100).unique())
     last_year = years[-1]
     last_month = 12
     last_day = calendar.monthrange(last_year, last_month)[1]
@@ -170,33 +170,8 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
     ])
 
 
-def pmpm_vs_expected_bar(data):
-    if data is None or data.empty:
-        return no_data_figure()
-    
-    # This is just for demo purposes, will be updated
-    colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
 
-    fig = go.Figure(go.Bar(
-        x=data["PMPM"],
-        y=data["ENCOUNTER_GROUP"],
-        orientation='h',
-        marker_color=colors,
-        text=[f"${v:,.0f}" for v in data['PMPM']],
-        textposition='outside',
-        hovertemplate=('Encounter Group: %{customdata}<br>PMPM: %{text}<extra></extra>'),
-        customdata=data['ENCOUNTER_GROUP'],
-        texttemplate="$%{x:,.0f}"
-    ))
-
-    fig.update_layout(
-        margin=dict(l=20, r=20, t=20, b=0),
-        yaxis=dict(autorange="reversed"),
-        xaxis=dict(showticklabels=False),
-        plot_bgcolor='white',
-        clickmode='event+select'
-    )
-    return fig
+# Use the new horizontal_bar_chart from graph.py directly where pmpm_vs_expected_bar was previously used.
 
 def encounter_type_pmpm_bar(data):
     if data is None or data.empty:
@@ -222,7 +197,7 @@ def encounter_type_pmpm_bar(data):
         yaxis=dict(autorange="reversed"),
         xaxis=dict(showticklabels=False),
         plot_bgcolor='white',
-        autosize=True,
+        # autosize=True,
         clickmode='event+select'
     )
 

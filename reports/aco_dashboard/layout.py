@@ -32,7 +32,7 @@ layout = dbc.Container(
                                                     ),
                                                     dcc.Graph(
                                                         id="encounter-group-chart",
-                                                        style={"height": "270px"},
+                                                        style={"maxHeight": "270px"},
                                                     ),
                                                 ]
                                             )

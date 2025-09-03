@@ -3,8 +3,8 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
-from components import demographics_card, risk_distribution_card
 from data.db_query import query_sqlite
+from old_components import demographics_card, risk_distribution_card
 from utils import dt_to_yyyymm
 
 

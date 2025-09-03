@@ -2,8 +2,8 @@ import pandas as pd
 from dash import Input, Output, callback
 from pandas import DateOffset
 
-from components import trend_chart
 from data.db_query import query_sqlite
+from old_components import trend_chart
 from utils import extract_sql_filters
 
 
