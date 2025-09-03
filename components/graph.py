@@ -78,7 +78,7 @@ def horizontal_bar_chart(
         max_value = max(x) if x else 0
         n_bars = len(x) if x else 1
     x_range_max = max_value * 1.1 if max_value > 0 else 1
-    bar_height = 40
+    bar_height = 20
     min_height = 200
     fig_height = max(min_height, n_bars * bar_height + 100) # Define the height of the bar to maintain the proper height of graph
     

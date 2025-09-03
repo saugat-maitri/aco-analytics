@@ -169,41 +169,6 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
         ])
     ])
 
-
-
-# Use the new horizontal_bar_chart from graph.py directly where pmpm_vs_expected_bar was previously used.
-
-def encounter_type_pmpm_bar(data):
-    if data is None or data.empty:
-        return no_data_figure()
-    
-    # This is just for demo purposes, will be updated
-    colors = ['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]]
-
-    fig = go.Figure(go.Bar(
-        x=data["PMPM"],
-        y=data["ENCOUNTER_TYPE"],
-        orientation='h',
-        marker_color=colors,
-        text=[f"${v:,.0f}" for v in data['PMPM']],
-        textposition='outside',
-        hovertemplate=('Encounter Type: %{customdata}<br>PMPM: %{text}<extra></extra>'),
-        customdata=data['ENCOUNTER_TYPE'],
-    ))
-
-    fig.update_layout(
-        height=max(300, 20 * len(data)),
-        margin=dict(l=20, r=20, t=20, b=0),
-        yaxis=dict(autorange="reversed"),
-        xaxis=dict(showticklabels=False),
-        plot_bgcolor='white',
-        # autosize=True,
-        clickmode='event+select'
-    )
-
-    return fig
-
-
 def condition_ccsr_cost_driver_graph(data):
     # Handle None or empty data
     if data is None or data.empty:
