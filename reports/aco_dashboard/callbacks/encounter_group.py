@@ -5,8 +5,8 @@ import pandas as pd
 from dash import Input, Output, callback
 
 from components import pmpm_vs_expected_bar
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm
+from services.database import sqlite_manager
+from services.utils import dt_to_yyyymm
 
 
 def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
@@ -39,7 +39,7 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
         """
-        result = query_sqlite(query)
+        result = sqlite_manager.query(query)
         # Ensure we always return a DataFrame, even if empty
         if result is None:
             return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])

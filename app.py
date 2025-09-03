@@ -3,8 +3,9 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 from components import header
-from constants import sqlite_path
-from data.data_loader import initialize_sqlite
+from services.database import sqlite_manager
+
+sqlite_manager.initialize()
 
 app = dash.Dash(
     __name__, 
@@ -26,5 +27,4 @@ app.layout = html.Div(
 )
 
 if __name__ == '__main__':
-    initialize_sqlite(sqlite_path)
     app.run(debug=True)
