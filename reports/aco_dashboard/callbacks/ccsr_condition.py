@@ -4,9 +4,10 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
+from components.graph import horizontal_bar_chart
 from data.db_query import query_sqlite
 from old_components import condition_ccsr_cost_driver_graph
-from utils import dt_to_yyyymm
+from utils import dt_to_yyyymm, truncate_text
 
 
 def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
@@ -65,7 +66,19 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date):
         
         ccsr_data = get_condition_ccsr_data(start_yyyymm, end_yyyymm)
         
-        return condition_ccsr_cost_driver_graph(ccsr_data)
+        ccsr_data['TRUNCATED_CATEGORY'] = ccsr_data['CCSR_CATEGORY_DESCRIPTION'].apply(
+            lambda x: truncate_text(x, 30)
+        )
+        return horizontal_bar_chart(
+            x=ccsr_data["PMPM"],
+            y=ccsr_data["TRUNCATED_CATEGORY"],
+            text_fn=lambda pmpm: [f"${v:,.0f}" for v in pmpm],
+            marker_color='#64AFE0',
+            margin=dict(l=20, r=20, t=20, b=0),
+            showticklabels=False,
+            customdata=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
+            hovertemplate=('CCSR Category: %{customdata}<br>PMPM: %{text}<br><extra></extra>')
+        )
     
     except Exception as e:
         print(f"Error in update_condition_ccsr_cost_driver_graph: {e}")

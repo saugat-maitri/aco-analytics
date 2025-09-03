@@ -33,7 +33,7 @@ def vertical_bar_chart(
     fig_height = max(min_height, n_bars * bar_height + 100) # Define the height of the bar to maintain the proper height of graph
 
     fig = go.Figure(go.Bar(
-        x=x, # Accepts the pandas data series
+        x=x,
         y=y, # Accepts the pandas data series
         orientation='v',
         marker_color=colors,
@@ -84,7 +84,7 @@ def horizontal_bar_chart(
     
     fig = go.Figure(go.Bar(
         x=x, # Accepts the pandas data series
-        y=y, # Accepts the pandas data series
+        y=y,
         orientation='h',
         marker_color=colors,
         text=text, # Text displays for each bar and can be seen on bar hover
