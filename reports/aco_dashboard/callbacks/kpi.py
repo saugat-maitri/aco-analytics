@@ -6,8 +6,8 @@ from dash import Input, Output, callback
 from dateutil.relativedelta import relativedelta
 
 from components.cards import kpi_card
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm, extract_sql_filters
+from services.database import sqlite_manager
+from services.utils import dt_to_yyyymm, extract_sql_filters
 
 
 def get_comparison_period(start: datetime, end: datetime, comparison_period: str) -> Tuple[datetime, datetime]:
@@ -86,7 +86,7 @@ def calc_kpis(
         member_months.mm
     FROM claims_agg, member_months
     """
-    result = query_sqlite(query)
+    result = sqlite_manager.query(query)
     row = result.iloc[0]
     paid = row.get("paid") or 0
     mm = row.get("mm") or 0

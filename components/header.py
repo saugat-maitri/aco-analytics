@@ -4,12 +4,12 @@ from datetime import date
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from data.db_query import query_sqlite
+from services.database import sqlite_manager
 
 
 def create_header():
     query = "SELECT DISTINCT(YEAR_MONTH) FROM FACT_CLAIMS"
-    claims_agg = query_sqlite(query)
+    claims_agg = sqlite_manager.query(query)
 
     # Use integer division to extract year from YEAR_MONTH which is in YYYYMM format
     years = sorted(((claims_agg["YEAR_MONTH"]).astype(int) // 100).unique())

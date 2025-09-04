@@ -5,8 +5,8 @@ import pandas as pd
 from dash import Input, Output, callback
 
 from components.graph import horizontal_bar_chart
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm, extract_sql_filters
+from services.database import sqlite_manager
+from services.utils import dt_to_yyyymm, extract_sql_filters
 
 
 def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
@@ -47,7 +47,7 @@ def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFr
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
         """
-        result = query_sqlite(query)
+        result = sqlite_manager.query(query)
         # Ensure we always return a DataFrame, even if empty
         if result is None:
             return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])

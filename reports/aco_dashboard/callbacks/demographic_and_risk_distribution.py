@@ -6,8 +6,8 @@ from dash import Input, Output, callback
 from components.box_plot import create_box_plot
 from components.cards import demographics_card
 from components.graph import no_data_figure
-from data.db_query import query_sqlite
-from utils import dt_to_yyyymm
+from services.database import sqlite_manager
+from services.utils import dt_to_yyyymm
 
 
 def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
@@ -42,7 +42,7 @@ def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         FROM member_month_details mmd
         CROSS JOIN member_month_counts mmc;
         """
-        result = query_sqlite(query)
+        result = sqlite_manager.query(query)
         # Ensure we always return a DataFrame, even if empty
         if result is None:
             return pd.DataFrame(columns=['TOTAL_MEMBER_MONTHS', 'AVG_MEMBERS_PER_MONTH', 'AVG_AGE', 'PERCENT_FEMALE', 'AVG_RISK_SCORE'])
@@ -62,7 +62,7 @@ def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFra
                 FROM fact_member_months 
                 WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             """
-        result = query_sqlite(query)
+        result = sqlite_manager.query(query)
         # Ensure we always return a DataFrame, even if empty
         if result is None:
             return pd.DataFrame(columns=['NORMALIZED_RISK_SCORE'])
