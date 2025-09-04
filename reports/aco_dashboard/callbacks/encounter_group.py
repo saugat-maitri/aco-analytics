@@ -4,9 +4,8 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
-from components.graph import horizontal_bar_chart
+from components.graph import horizontal_bar_chart, no_data_figure
 from data.db_query import query_sqlite
-from old_components import no_data_figure
 from utils import dt_to_yyyymm
 
 

@@ -3,8 +3,10 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
+from components.box_plot import create_box_plot
+from components.cards import demographics_card
+from components.graph import no_data_figure
 from data.db_query import query_sqlite
-from old_components import demographics_card, risk_distribution_card
 from utils import dt_to_yyyymm
 
 
@@ -88,7 +90,7 @@ def update_demographic_data(start_date, end_date):
     
     except Exception as e:
         print(f"Error in update_demographic_data: {e}")
-        return f"Error loading data: {str(e)}"
+        return no_data_figure(message=f"Error loading data: {str(e)}")
     
 @callback(
     Output("risk-distribution-card", "figure"),
@@ -103,9 +105,14 @@ def update_risk_data(start_date, end_date):
         
         # Handle case where query returns None
         risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
-        
-        return risk_distribution_card(risk_data)
-    
+
+        return create_box_plot(
+                data=risk_data, 
+                y="NORMALIZED_RISK_SCORE", 
+                points="outliers",
+                show_line=True
+            )
+
     except Exception as e:
         print(f"Error in update_risk_data: {e}")
-        return f"Error loading data: {str(e)}"
+        return no_data_figure(message=f"Error loading data: {str(e)}")

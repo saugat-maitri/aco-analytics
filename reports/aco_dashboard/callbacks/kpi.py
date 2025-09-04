@@ -5,8 +5,8 @@ from typing import Optional, Tuple
 from dash import Input, Output, callback
 from dateutil.relativedelta import relativedelta
 
+from components.cards import kpi_card
 from data.db_query import query_sqlite
-from old_components import kpi_card
 from utils import dt_to_yyyymm, extract_sql_filters
 
 
