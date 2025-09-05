@@ -5,7 +5,7 @@ from components.no_data_figure import no_data_figure
 
 
 def box_plot(
-        data: DataFrame|None, 
+        data: DataFrame, 
         y: str = "", 
         points: str|bool = False,
         xaxis_title: str = "", 
@@ -17,7 +17,7 @@ def box_plot(
     """Create a box plot visualization using plotly express.
 
     Args:
-        data : Input DataFrame containing the data to plot. If None or empty, returns no data figure.
+        data : Input DataFrame containing the data to plot. If empty, returns no data figure.
         y : Column name from DataFrame to plot on y-axis. Default ""
         points : Display style for points. Options include 'outliers', 'all', or 'False'. Default ""
         xaxis_title : Title for x-axis label. Default ""
@@ -35,7 +35,7 @@ def box_plot(
     """
     box_height = height or 117
 
-    if data is not None and data.empty:
+    if data.empty:
         return no_data_figure(message="No data available for the selected period.")
 
     fig = px.box(data, y=y, points=points)

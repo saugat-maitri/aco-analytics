@@ -10,8 +10,7 @@ from services.utils import dt_to_yyyymm
 
 
 def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
-    try:
-        query = f"""
+    query = f"""
         WITH claims_by_encounter_group AS (
             SELECT
                 grp.ENCOUNTER_GROUP,
@@ -38,17 +37,8 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         FROM claims_by_encounter_group clm
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
-        """
-        result = sqlite_manager.query(query)
-        # Ensure we always return a DataFrame, even if empty
-        if result is None:
-            return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
-        
-        return result
-        
-    except Exception as e:
-        print(f"Error in get_pmpm_performance_vs_expected_data: {e}")
-        return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
+    """
+    return sqlite_manager.query(query)
 
 @callback(
     Output("encounter-group-chart", "figure"),
@@ -63,17 +53,12 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
         
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
         
-        def color_fn(pmpm):
-            return ['#ed3030' if val > 400 else '#428c8d' for val in pmpm]
-
-        def text_fn(pmpm):
-            return [f"${v:,.0f}" for v in pmpm]
-        
         return horizontal_bar_chart(
-            x=data["PMPM"],
-            y=data["ENCOUNTER_GROUP"],
-            color_fn=color_fn,
-            text_fn=text_fn,
+            data=data,
+            x="PMPM",
+            y="ENCOUNTER_GROUP",
+            color_fn=['#ed3030' if val > 400 else '#428c8d' for val in data['PMPM']],
+            text_fn=['${:,.0f}'.format(val) for val in data['PMPM']],
             margin=dict(l=20, r=20, t=20, b=20),
             marker_color='#64AFE0',
             showticklabels=False,

@@ -11,46 +11,40 @@ from services.utils import dt_to_yyyymm
 
 
 def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
-    try:
-        query = f"""
-        WITH member_month_details AS (
-            SELECT 
-                f.PERSON_ID,
-                f.YEAR_MONTH,
-                d.SEX,
-                d.AGE,
-                f.NORMALIZED_RISK_SCORE,
-                CAST(f.PERSON_ID AS TEXT) || '-' || CAST(f.YEAR_MONTH AS TEXT) AS MEMBER_MONTH_ID
-            FROM FACT_MEMBER_MONTHS AS f
-            LEFT JOIN DIM_MEMBER AS d
-                ON f.PERSON_ID = d.PERSON_ID
-            WHERE f.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-        ),
-        member_month_counts AS (
-            SELECT
-                COUNT(DISTINCT MEMBER_MONTH_ID) AS TOTAL_MEMBER_MONTHS,
-                COUNT(DISTINCT YEAR_MONTH) AS TOTAL_MONTHS
-            FROM member_month_details
-        )
+    query = f"""
+    WITH member_month_details AS (
         SELECT 
-            mmc.TOTAL_MEMBER_MONTHS,
-            mmc.TOTAL_MEMBER_MONTHS * 1.0 / mmc.TOTAL_MONTHS AS AVG_MEMBERS_PER_MONTH,
-            AVG(mmd.AGE) AS AVG_AGE,
-            100.0 * SUM(CASE WHEN LOWER(mmd.SEX) = 'female' THEN 1 ELSE 0 END) 
-                / mmc.TOTAL_MEMBER_MONTHS AS PERCENT_FEMALE,
-            AVG(mmd.NORMALIZED_RISK_SCORE) AS AVG_RISK_SCORE
-        FROM member_month_details mmd
-        CROSS JOIN member_month_counts mmc;
-        """
-        result = sqlite_manager.query(query)
-        return result
-        
-    except Exception as e:
-        print(f"Error in get_demographic_data: {e}")
-        return pd.DataFrame(columns=['TOTAL_MEMBER_MONTHS', 'AVG_MEMBERS_PER_MONTH', 'AVG_AGE', 'PERCENT_FEMALE', 'AVG_RISK_SCORE'])
+            f.PERSON_ID,
+            f.YEAR_MONTH,
+            d.SEX,
+            d.AGE,
+            f.NORMALIZED_RISK_SCORE,
+            CAST(f.PERSON_ID AS TEXT) || '-' || CAST(f.YEAR_MONTH AS TEXT) AS MEMBER_MONTH_ID
+        FROM FACT_MEMBER_MONTHS AS f
+        LEFT JOIN DIM_MEMBER AS d
+            ON f.PERSON_ID = d.PERSON_ID
+        WHERE f.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+    ),
+    member_month_counts AS (
+        SELECT
+            COUNT(DISTINCT MEMBER_MONTH_ID) AS TOTAL_MEMBER_MONTHS,
+            COUNT(DISTINCT YEAR_MONTH) AS TOTAL_MONTHS
+        FROM member_month_details
+    )
+    SELECT 
+        mmc.TOTAL_MEMBER_MONTHS,
+        mmc.TOTAL_MEMBER_MONTHS * 1.0 / mmc.TOTAL_MONTHS AS AVG_MEMBERS_PER_MONTH,
+        AVG(mmd.AGE) AS AVG_AGE,
+        100.0 * SUM(CASE WHEN LOWER(mmd.SEX) = 'female' THEN 1 ELSE 0 END) 
+            / mmc.TOTAL_MEMBER_MONTHS AS PERCENT_FEMALE,
+        AVG(mmd.NORMALIZED_RISK_SCORE) AS AVG_RISK_SCORE
+    FROM member_month_details mmd
+    CROSS JOIN member_month_counts mmc;
+    """
+    return sqlite_manager.query(query)        
     
 
-def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame | None:
+def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
     """Fetch risk distribution data between start_yyyymm and end_yyyymm.
     
     Returns:
@@ -63,10 +57,7 @@ def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFra
         FROM fact_member_months
         WHERE YEAR_MONTH BETWEEN '{start_yyyymm}' AND '{end_yyyymm}'
     """
-    result = sqlite_manager.query(query)
-
-    return result
-
+    return sqlite_manager.query(query)
 
 
 @callback(

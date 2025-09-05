@@ -71,18 +71,14 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
 
         filters = extract_sql_filters(group_click)
         
-        data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
-        def color_fn(pmpm):
-            return ['#ed3030' if val > 400 else '#428c8d' for val in pmpm]
-
-        def text_fn(pmpm):
-            return [f"${v:,.0f}" for v in pmpm]
+        data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)            
         
         return horizontal_bar_chart(
-            x=data["PMPM"],
-            y=data["ENCOUNTER_TYPE"],
-            color_fn=color_fn,
-            text_fn=text_fn,
+            data=data,
+            x="PMPM",
+            y="ENCOUNTER_TYPE",
+            color_fn=['#ed3030' if val > 400 else '#428c8d' for val in data["PMPM"]],
+            text_fn=[f"${v:,.0f}" for v in data["PMPM"]],
             margin=dict(l=20, r=20, t=20, b=20),
             showticklabels=False,
             customdata=data["ENCOUNTER_TYPE"],

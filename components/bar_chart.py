@@ -1,7 +1,10 @@
 import plotly.graph_objs as go
 
+from components.no_data_figure import no_data_figure
+
 
 def vertical_bar_chart(
+    data,
     x,
     y,
     color_fn=None,
@@ -41,23 +44,26 @@ def vertical_bar_chart(
         - Y-axis range is automatically set to 110% of maximum y value
         - Handles empty data gracefully.
     """
-    colors = color_fn(y) if color_fn else marker_color
-    text = text_fn(y) if text_fn else y
-    custom = customdata if customdata is not None else y if hasattr(y, "empty") else None
+    if data.empty:
+        return no_data_figure(message="No data available for the selected period.")
     
-    max_value = max(y) if not y.empty else 0
-    n_bars = len(x) if not x.empty else 1
+    x_value = data[x]
+    y_value = data[y]
+    custom = customdata if customdata is not None else y if hasattr(y, "empty") else None
+
+    max_value = max(y_value) if not y_value.empty else 0
+    n_bars = len(x_value) if not x_value.empty else 1
     y_range_max = max_value * 1.1 if max_value > 0 else 1
     bar_height = 40
     min_height = 200
     fig_height = max(min_height, n_bars * bar_height + 100) # Define the height of the bar to maintain the proper height of graph
 
     fig = go.Figure(go.Bar(
-        x=x,
-        y=y,
+        x=x_value,
+        y=y_value,
         orientation='v',
-        marker_color=colors,
-        text=text,
+        marker_color=color_fn if color_fn else marker_color,
+        text=text_fn,
         textposition=textposition,
         hovertemplate=hovertemplate,
         customdata=custom,
@@ -73,6 +79,7 @@ def vertical_bar_chart(
     return fig
 
 def horizontal_bar_chart(
+    data,
     x,
     y,
     color_fn=None,
@@ -110,23 +117,26 @@ def horizontal_bar_chart(
         - Bars are displayed in reversed order (top to bottom)
         - The x-axis range extends 10% beyond the maximum value
     """
-    colors = color_fn(x) if color_fn else marker_color # Use color function if provided for the individual bar
-    text = text_fn(x) if text_fn else x # Define the text to display on each bar
-    custom = customdata if customdata is not None else y # Use custom data if provided, else use y values fot the text
-    
-    max_value = max(x) if not x.empty else 0
-    n_bars = len(y) if not y.empty else 1
+    if data.empty:
+        return no_data_figure(message="No data available for the selected period.")
+
+    x_value = data[x]
+    y_value = data[y]
+    custom = customdata if customdata is not None else y_value # Use custom data if provided, else use y values fot the text
+
+    max_value = max(x_value) if not x_value.empty else 0
+    n_bars = len(y_value) if not y_value.empty else 1
     x_range_max = max_value * 1.1 if max_value > 0 else 1
     bar_height = 20
     min_height = 200
     fig_height = max(min_height, n_bars * bar_height + 100) # Define the height of the bar to maintain the proper height of graph
     
     fig = go.Figure(go.Bar(
-        x=x,
-        y=y,
+        x=x_value,
+        y=y_value,
         orientation='h',
-        marker_color=colors,
-        text=text,
+        marker_color=color_fn if color_fn else marker_color,
+        text=text_fn,
         textposition=textposition,
         hovertemplate=hovertemplate,
         customdata=custom,
