@@ -60,7 +60,7 @@ def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFra
     query = f"""
         SELECT 
             NORMALIZED_RISK_SCORE
-        FROM fact_member_monthss
+        FROM fact_member_months
         WHERE YEAR_MONTH BETWEEN '{start_yyyymm}' AND '{end_yyyymm}'
     """
     result = sqlite_manager.query(query)
