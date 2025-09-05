@@ -41,12 +41,12 @@ def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
     FROM member_month_details mmd
     CROSS JOIN member_month_counts mmc;
     """
-    return sqlite_manager.query(query)        
-    
+    return sqlite_manager.query(query)
+
 
 def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
     """Fetch risk distribution data between start_yyyymm and end_yyyymm.
-    
+
     Returns:
         - DataFrame if query succeeds
         - None if query fails
@@ -70,14 +70,15 @@ def update_demographic_data(start_date, end_date):
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        
+
         demographic_data = get_demographic_data(start_yyyymm, end_yyyymm)
         return demographics_card(demographic_data)
-    
+
     except Exception as e:
         print(f"Error in update_demographic_data: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
-    
+
+
 @callback(
     Output("risk-distribution-card", "figure"),
     Input("date-picker-input", "start_date"),
@@ -89,7 +90,7 @@ def update_risk_data(start_date: str, end_date: str):
         # Convert date strings to YYYYMM format
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        
+
         # Fetch data
         risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
 

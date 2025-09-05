@@ -29,7 +29,8 @@ def get_comparison_offset(month, comparison_period, selected_months=None):
         comp_end = month - DateOffset(months=1)
     else:
         return pd.DatetimeIndex([])
-    return pd.date_range(start=comp_start, end=comp_end, freq='MS')
+    return pd.date_range(start=comp_start, end=comp_end, freq="MS")
+
 
 def get_trends_data(filters) -> pd.DataFrame:
     filter_sql = ""
@@ -87,15 +88,37 @@ def get_trends_data(filters) -> pd.DataFrame:
         """
         result = sqlite_manager.query(query)
         if not result.empty:
-            result["YEAR_MONTH"] = pd.to_datetime(result["YEAR_MONTH"].astype(str), format="%Y%m")
+            result["YEAR_MONTH"] = pd.to_datetime(
+                result["YEAR_MONTH"].astype(str), format="%Y%m"
+            )
         else:
-            return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS_COUNT', 'MEMBERS_COUNT', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
-        
+            return pd.DataFrame(
+                columns=[
+                    "YEAR_MONTH",
+                    "TOTAL_PAID",
+                    "ENCOUNTERS_COUNT",
+                    "MEMBERS_COUNT",
+                    "PMPM",
+                    "PKPY",
+                    "COST_PER_ENCOUNTER",
+                ]
+            )
+
         return result
-        
+
     except Exception as e:
         print(f"Error in get_trends_data: {e}")
-        return pd.DataFrame(columns=['YEAR_MONTH', 'TOTAL_PAID', 'ENCOUNTERS_COUNT', 'MEMBERS_COUNT', 'PMPM', 'PKPY', 'COST_PER_ENCOUNTER'])
+        return pd.DataFrame(
+            columns=[
+                "YEAR_MONTH",
+                "TOTAL_PAID",
+                "ENCOUNTERS_COUNT",
+                "MEMBERS_COUNT",
+                "PMPM",
+                "PKPY",
+                "COST_PER_ENCOUNTER",
+            ]
+        )
 
 
 @callback(
@@ -107,14 +130,16 @@ def get_trends_data(filters) -> pd.DataFrame:
     Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_trend(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+def update_pmpm_trend(
+    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
+):
     filters = extract_sql_filters(group_click, type_click, ccsr_click)
 
     df = get_trends_data(filters)
 
     start = pd.to_datetime(start_date).replace(day=1)
     end = pd.to_datetime(end_date).replace(day=1)
-    selected_months = pd.date_range(start=start, end=end, freq='MS')
+    selected_months = pd.date_range(start=start, end=end, freq="MS")
 
     current_data = []
     if not df.empty:
@@ -133,6 +158,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, type
 
     return trend_chart(current_data, comparison_data)
 
+
 @callback(
     Output("pkpy-trend", "figure"),
     Input("date-picker-input", "start_date"),
@@ -142,14 +168,16 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, type
     Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pkpy_trend(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+def update_pkpy_trend(
+    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
+):
     filters = extract_sql_filters(group_click, type_click, ccsr_click)
 
     df = get_trends_data(filters)
 
     start = pd.to_datetime(start_date).replace(day=1)
     end = pd.to_datetime(end_date).replace(day=1)
-    selected_months = pd.date_range(start=start, end=end, freq='MS')
+    selected_months = pd.date_range(start=start, end=end, freq="MS")
 
     current_data = []
     if not df.empty:
@@ -168,6 +196,7 @@ def update_pkpy_trend(start_date, end_date, comparison_period, group_click, type
 
     return trend_chart(current_data, comparison_data)
 
+
 @callback(
     Output("cost-per-trend", "figure"),
     Input("date-picker-input", "start_date"),
@@ -177,19 +206,23 @@ def update_pkpy_trend(start_date, end_date, comparison_period, group_click, type
     Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_cost_per_trend(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+def update_cost_per_trend(
+    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
+):
     filters = extract_sql_filters(group_click, type_click, ccsr_click)
 
     df = get_trends_data(filters)
 
     start = pd.to_datetime(start_date).replace(day=1)
     end = pd.to_datetime(end_date).replace(day=1)
-    selected_months = pd.date_range(start=start, end=end, freq='MS')
+    selected_months = pd.date_range(start=start, end=end, freq="MS")
 
     current_data = []
     if not df.empty:
         current_df = df[df["YEAR_MONTH"].isin(selected_months)]
-        current_data = list(zip(current_df["YEAR_MONTH"], current_df["COST_PER_ENCOUNTER"]))
+        current_data = list(
+            zip(current_df["YEAR_MONTH"], current_df["COST_PER_ENCOUNTER"])
+        )
     comparison_data = []
     for month in selected_months:
         comp_range = get_comparison_offset(month, comparison_period, selected_months)
@@ -198,8 +231,10 @@ def update_cost_per_trend(start_date, end_date, comparison_period, group_click, 
         if not comp_df.empty:
             total_paid = comp_df["TOTAL_PAID"].sum()
             total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
-            
-            avg_cost_per_encounter = total_paid / total_encounters if total_encounters else 0
+
+            avg_cost_per_encounter = (
+                total_paid / total_encounters if total_encounters else 0
+            )
             comparison_data.append((month, avg_cost_per_encounter))
 
     return trend_chart(current_data, comparison_data)

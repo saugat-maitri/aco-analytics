@@ -18,11 +18,13 @@ def no_data_figure(message="No data available for the selected period"):
     fig = go.Figure()
     fig.add_annotation(
         text=message,
-        xref="paper", yref="paper",
-        x=0.5, y=0.5,
+        xref="paper",
+        yref="paper",
+        x=0.5,
+        y=0.5,
         showarrow=False,
         font=dict(size=18, color="gray"),
-        align="center"
+        align="center",
     )
     fig.update_layout(
         xaxis=dict(visible=False),

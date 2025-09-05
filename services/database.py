@@ -47,7 +47,9 @@ class SnowflakeManager:
                 else:
                     connect_args["password"] = self.config["password"]
 
-                SnowflakeManager._connection = snowflake.connector.connect(**connect_args)
+                SnowflakeManager._connection = snowflake.connector.connect(
+                    **connect_args
+                )
                 print("Snowflake connection established successfully")
 
             except snowflake.connector.Error as e:
@@ -99,7 +101,9 @@ class SQLiteManager:
             except Exception as e:
                 raise RuntimeError(f"❌ Error loading {table_name} from CSV: {e}")
 
-    def _load_from_snowflake(self, conn: sqlite3.Connection, sf_manager: SnowflakeManager):
+    def _load_from_snowflake(
+        self, conn: sqlite3.Connection, sf_manager: SnowflakeManager
+    ):
         """Load data from Snowflake into SQLite."""
         sf_conn = sf_manager.get_connection()
 
@@ -130,7 +134,6 @@ class SQLiteManager:
         """
         conn = sqlite3.connect(self.db_path)
         env_file = Path(__file__).resolve().parents[1] / ".env"
-
         try:
             if env_file.exists():
                 print("Using Snowflake as data source...")
@@ -144,5 +147,6 @@ class SQLiteManager:
             conn.close()
 
         print(f"SQLite initialization complete: {self.db_path}")
+
 
 sqlite_manager = SQLiteManager()

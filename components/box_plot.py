@@ -5,15 +5,15 @@ from components.no_data_figure import no_data_figure
 
 
 def box_plot(
-        data: DataFrame, 
-        y: str = "", 
-        points: str|bool = False,
-        xaxis_title: str = "", 
-        yaxis_title: str = "", 
-        show_legend: bool = False, 
-        show_line: bool = False, 
-        height=None
-    ):
+    data: DataFrame,
+    y: str = "",
+    points: str | bool = False,
+    xaxis_title: str = "",
+    yaxis_title: str = "",
+    show_legend: bool = False,
+    show_line: bool = False,
+    height=None,
+):
     """Create a box plot visualization using plotly express.
 
     Args:
@@ -41,7 +41,7 @@ def box_plot(
     fig = px.box(data, y=y, points=points)
 
     fig.update_layout(
-        plot_bgcolor='white',
+        plot_bgcolor="white",
         showlegend=show_legend,
         yaxis_title=yaxis_title,
         xaxis_title=xaxis_title,
@@ -50,5 +50,12 @@ def box_plot(
     )
     # Clean up grid and axis lines for a cleaner look
     fig.update_xaxes(showgrid=False, visible=False)
-    fig.update_yaxes(showgrid=True, zeroline=False, ticks="outside", showline=show_line, linewidth=1, linecolor="#ccc")
+    fig.update_yaxes(
+        showgrid=True,
+        zeroline=False,
+        ticks="outside",
+        showline=show_line,
+        linewidth=1,
+        linecolor="#ccc",
+    )
     return fig

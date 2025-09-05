@@ -12,15 +12,16 @@ def vertical_bar_chart(
     margin=None,
     marker_color=None,
     showticklabels=True,
-    plot_bgcolor='white',
-    clickmode='event+select',
+    plot_bgcolor="white",
+    clickmode="event+select",
     customdata=None,
-    textposition='outside',
-    hovertemplate=None
+    textposition="outside",
+    hovertemplate=None,
 ):
     """Create and return a vertical bar chart using plotly.
 
     Args:
+        data (pandas.DataFrame): Input DataFrame containing the data to plot.
         x (array-like): Values for x-axis.
         y (array-like): Values for y-axis. Can be a pandas Series or list.
         color_fn (callable, optional): Function to determine bar colors based on y values. Defaults to None.
@@ -46,37 +47,44 @@ def vertical_bar_chart(
     """
     if data.empty:
         return no_data_figure(message="No data available for the selected period.")
-    
+
     x_value = data[x]
     y_value = data[y]
-    custom = customdata if customdata is not None else y if hasattr(y, "empty") else None
+    custom = (
+        customdata if customdata is not None else y if hasattr(y, "empty") else None
+    )
 
     max_value = max(y_value) if not y_value.empty else 0
     n_bars = len(x_value) if not x_value.empty else 1
     y_range_max = max_value * 1.1 if max_value > 0 else 1
     bar_height = 40
     min_height = 200
-    fig_height = max(min_height, n_bars * bar_height + 100) # Define the height of the bar to maintain the proper height of graph
+    fig_height = max(
+        min_height, n_bars * bar_height + 100
+    )  # Define the height of the bar to maintain the proper height of graph
 
-    fig = go.Figure(go.Bar(
-        x=x_value,
-        y=y_value,
-        orientation='v',
-        marker_color=color_fn if color_fn else marker_color,
-        text=text_fn,
-        textposition=textposition,
-        hovertemplate=hovertemplate,
-        customdata=custom,
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=x_value,
+            y=y_value,
+            orientation="v",
+            marker_color=color_fn if color_fn else marker_color,
+            text=text_fn,
+            textposition=textposition,
+            hovertemplate=hovertemplate,
+            customdata=custom,
+        )
+    )
     fig.update_layout(
-        margin=margin or dict(l=20, r=20, t=20, b=20),  
-        xaxis=dict(automargin=True),          
+        margin=margin or dict(l=20, r=20, t=20, b=20),
+        xaxis=dict(automargin=True),
         yaxis=dict(showticklabels=showticklabels, range=[0, y_range_max]),
         plot_bgcolor=plot_bgcolor,
         clickmode=clickmode,
-        height=fig_height
+        height=fig_height,
     )
     return fig
+
 
 def horizontal_bar_chart(
     data,
@@ -87,15 +95,16 @@ def horizontal_bar_chart(
     margin=None,
     marker_color=None,
     showticklabels=True,
-    plot_bgcolor='white',
-    clickmode='event+select',
+    plot_bgcolor="white",
+    clickmode="event+select",
     customdata=None,
-    textposition='outside',
-    hovertemplate=None
+    textposition="outside",
+    hovertemplate=None,
 ):
     """Create and return a horizontal bar chart using plotly.
 
     Args:
+        data (pandas.DataFrame): Input DataFrame containing the data to plot.
         x (array-like): Values for the horizontal bars (bar lengths). Can be a pandas Series or list.
         y (array-like): Labels for the bars (y-axis).
         color_fn (callable, optional): Function to determine bar colors based on x values. Defaults to None.
@@ -122,25 +131,31 @@ def horizontal_bar_chart(
 
     x_value = data[x]
     y_value = data[y]
-    custom = customdata if customdata is not None else y_value # Use custom data if provided, else use y values fot the text
+    custom = (
+        customdata if customdata is not None else y_value
+    )  # Use custom data if provided, else use y values fot the text
 
     max_value = max(x_value) if not x_value.empty else 0
     n_bars = len(y_value) if not y_value.empty else 1
     x_range_max = max_value * 1.1 if max_value > 0 else 1
     bar_height = 20
     min_height = 200
-    fig_height = max(min_height, n_bars * bar_height + 100) # Define the height of the bar to maintain the proper height of graph
-    
-    fig = go.Figure(go.Bar(
-        x=x_value,
-        y=y_value,
-        orientation='h',
-        marker_color=color_fn if color_fn else marker_color,
-        text=text_fn,
-        textposition=textposition,
-        hovertemplate=hovertemplate,
-        customdata=custom,
-    ))
+    fig_height = max(
+        min_height, n_bars * bar_height + 100
+    )  # Define the height of the bar to maintain the proper height of graph
+
+    fig = go.Figure(
+        go.Bar(
+            x=x_value,
+            y=y_value,
+            orientation="h",
+            marker_color=color_fn if color_fn else marker_color,
+            text=text_fn,
+            textposition=textposition,
+            hovertemplate=hovertemplate,
+            customdata=custom,
+        )
+    )
     fig.update_layout(
         margin=margin or dict(l=20, r=20, t=0, b=0),
         yaxis=dict(autorange="reversed"),
