@@ -6,12 +6,12 @@ from components.no_data_figure import no_data_figure
 
 def box_plot(
         data: DataFrame|None, 
-        y: str ="", 
-        points: str|bool =False,
-        xaxis_title: str ="", 
-        yaxis_title: str ="", 
-        show_legend: bool =False, 
-        show_line: bool =False, 
+        y: str = "", 
+        points: str|bool = False,
+        xaxis_title: str = "", 
+        yaxis_title: str = "", 
+        show_legend: bool = False, 
+        show_line: bool = False, 
         height=None
     ):
     """Create a box plot visualization using plotly express.

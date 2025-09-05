@@ -65,7 +65,6 @@ def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFra
     """
     result = sqlite_manager.query(query)
 
-    # Return DataFrame even if empty
     return result
 
 
