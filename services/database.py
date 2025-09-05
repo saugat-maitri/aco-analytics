@@ -138,7 +138,7 @@ class SQLiteManager:
                 self._load_from_snowflake(conn, sf_manager)
             else:
                 print("Using CSV as data source...")
-                csv_folder = Path(__file__).resolve().parent.parent / "csv_sample"
+                csv_folder = Path(__file__).resolve().parents[1] / "csv_sample"
                 self._load_from_csv(conn, str(csv_folder))
         finally:
             conn.close()
