@@ -45,12 +45,8 @@ def vertical_bar_chart(
     text = text_fn(y) if text_fn else y
     custom = customdata if customdata is not None else y if hasattr(y, "empty") else None
     
-    if hasattr(y, "empty"):
-        max_value = max(y) if not y.empty else 0
-        n_bars = len(y) if not y.empty else 1
-    else:
-        max_value = max(y) if y else 0
-        n_bars = len(y) if y else 1
+    max_value = max(y) if not y.empty else 0
+    n_bars = len(x) if not x.empty else 1
     y_range_max = max_value * 1.1 if max_value > 0 else 1
     bar_height = 40
     min_height = 200
@@ -118,12 +114,8 @@ def horizontal_bar_chart(
     text = text_fn(x) if text_fn else x # Define the text to display on each bar
     custom = customdata if customdata is not None else y # Use custom data if provided, else use y values fot the text
     
-    if hasattr(x, "empty"):
-        max_value = max(x) if not x.empty else 0
-        n_bars = len(x) if not x.empty else 1
-    else:
-        max_value = max(x) if x else 0
-        n_bars = len(x) if x else 1
+    max_value = max(x) if not x.empty else 0
+    n_bars = len(y) if not y.empty else 1
     x_range_max = max_value * 1.1 if max_value > 0 else 1
     bar_height = 20
     min_height = 200
