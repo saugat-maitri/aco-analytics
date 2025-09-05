@@ -1,10 +1,9 @@
-
 from datetime import datetime
 
 import pandas as pd
 from dash import Input, Output, callback
 
-from components.graph import horizontal_bar_chart
+from components.bar_chart import horizontal_bar_chart
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm, extract_sql_filters
 

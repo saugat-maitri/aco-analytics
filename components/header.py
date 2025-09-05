@@ -7,7 +7,7 @@ from dash import dcc, html
 from services.database import sqlite_manager
 
 
-def create_header():
+def header():
     query = "SELECT DISTINCT(YEAR_MONTH) FROM FACT_CLAIMS"
     claims_agg = sqlite_manager.query(query)
 

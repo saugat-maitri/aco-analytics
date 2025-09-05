@@ -1,10 +1,10 @@
-
 from datetime import datetime
 
 import pandas as pd
 from dash import Input, Output, callback
 
-from components.graph import horizontal_bar_chart, no_data_figure
+from components.bar_chart import horizontal_bar_chart
+from components.no_data_figure import no_data_figure
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm
 

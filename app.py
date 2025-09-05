@@ -2,7 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
-from components.header import create_header
+from components.header import header
 from services.database import sqlite_manager
 
 sqlite_manager.initialize()
@@ -19,7 +19,7 @@ app = dash.Dash(
 
 app.layout = html.Div(
     [
-        create_header(),
+        header(),
         dbc.Container(
             [dash.page_container], fluid=True
         ),

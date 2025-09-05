@@ -1,17 +1,17 @@
-
 import plotly.express as px
+from pandas import DataFrame
 
-from components.graph import no_data_figure
+from components.no_data_figure import no_data_figure
 
 
-def create_box_plot(
-        data=None, 
-        y="", 
-        points=False,
-        xaxis_title="", 
-        yaxis_title="", 
-        show_legend=False, 
-        show_line=False, 
+def box_plot(
+        data: DataFrame|None, 
+        y: str ="", 
+        points: str|bool =False,
+        xaxis_title: str ="", 
+        yaxis_title: str ="", 
+        show_legend: bool =False, 
+        show_line: bool =False, 
         height=None
     ):
     """Create a box plot visualization using plotly express.
@@ -34,8 +34,9 @@ def create_box_plot(
         - Only outlier points are shown in the box plot.
     """
     box_height = height or 117
-    if data is None or data.empty:
-        return no_data_figure()
+
+    if data is not None and data.empty:
+        return no_data_figure(message="No data available for the selected period.")
 
     fig = px.box(data, y=y, points=points)
 

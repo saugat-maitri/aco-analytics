@@ -1,11 +1,10 @@
-
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
 
 from dash import Input, Output, callback
 from dateutil.relativedelta import relativedelta
 
-from components.cards import kpi_card
+from components.kpi_card import kpi_card
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm, extract_sql_filters
 

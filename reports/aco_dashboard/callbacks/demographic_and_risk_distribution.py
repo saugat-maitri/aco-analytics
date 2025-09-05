@@ -3,9 +3,9 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
-from components.box_plot import create_box_plot
-from components.cards import demographics_card
-from components.graph import no_data_figure
+from components.box_plot import box_plot
+from components.demographics_card import demographics_card
+from components.no_data_figure import no_data_figure
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm
 
@@ -43,10 +43,6 @@ def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         CROSS JOIN member_month_counts mmc;
         """
         result = sqlite_manager.query(query)
-        # Ensure we always return a DataFrame, even if empty
-        if result is None:
-            return pd.DataFrame(columns=['TOTAL_MEMBER_MONTHS', 'AVG_MEMBERS_PER_MONTH', 'AVG_AGE', 'PERCENT_FEMALE', 'AVG_RISK_SCORE'])
-
         return result
         
     except Exception as e:
@@ -54,24 +50,24 @@ def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         return pd.DataFrame(columns=['TOTAL_MEMBER_MONTHS', 'AVG_MEMBERS_PER_MONTH', 'AVG_AGE', 'PERCENT_FEMALE', 'AVG_RISK_SCORE'])
     
 
-def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
-    try:
-        query = f"""
-                SELECT 
-                    NORMALIZED_RISK_SCORE
-                FROM fact_member_months 
-                WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            """
-        result = sqlite_manager.query(query)
-        # Ensure we always return a DataFrame, even if empty
-        if result is None:
-            return pd.DataFrame(columns=['NORMALIZED_RISK_SCORE'])
+def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame | None:
+    """Fetch risk distribution data between start_yyyymm and end_yyyymm.
+    
+    Returns:
+        - DataFrame if query succeeds
+        - None if query fails
+    """
+    query = f"""
+        SELECT 
+            NORMALIZED_RISK_SCORE
+        FROM fact_member_monthss
+        WHERE YEAR_MONTH BETWEEN '{start_yyyymm}' AND '{end_yyyymm}'
+    """
+    result = sqlite_manager.query(query)
 
-        return result
-        
-    except Exception as e:
-        print(f"Error in get_risk_distribution_data: {e}")
-        return pd.DataFrame(columns=['NORMALIZED_RISK_SCORE'])
+    # Return DataFrame even if empty
+    return result
+
 
 
 @callback(
@@ -97,21 +93,23 @@ def update_demographic_data(start_date, end_date):
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
 )
-def update_risk_data(start_date, end_date):
+def update_risk_data(start_date: str, end_date: str):
+    """Prepare risk distribution visualization for given date range."""
     try:
-        # Convert date strings to YYYYMM format for filtering
+        # Convert date strings to YYYYMM format
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
         
-        # Handle case where query returns None
+        # Fetch data
         risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
 
-        return create_box_plot(
-                data=risk_data, 
-                y="NORMALIZED_RISK_SCORE", 
-                points="outliers",
-                show_line=True
-            )
+        fig = box_plot(
+            data=risk_data,
+            y="NORMALIZED_RISK_SCORE",
+            points="outliers",
+            show_line=True,
+        )
+        return fig
 
     except Exception as e:
         print(f"Error in update_risk_data: {e}")
