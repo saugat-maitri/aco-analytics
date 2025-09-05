@@ -1,16 +1,17 @@
-
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
 
 from dash import Input, Output, callback
 from dateutil.relativedelta import relativedelta
 
-from components import kpi_card
+from components.kpi_card import kpi_card
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm, extract_sql_filters
 
 
-def get_comparison_period(start: datetime, end: datetime, comparison_period: str) -> Tuple[datetime, datetime]:
+def get_comparison_period(
+    start: datetime, end: datetime, comparison_period: str
+) -> Tuple[datetime, datetime]:
     period_months = (end.year - start.year) * 12 + (end.month - start.month) + 1
 
     if comparison_period == "Same Period Last Year":
@@ -48,10 +49,9 @@ def get_comparison_period(start: datetime, end: datetime, comparison_period: str
 
     return comp_start, comp_end
 
+
 def calc_kpis(
-    start_date: datetime,
-    end_date: datetime,
-    filters: Optional[dict] = None 
+    start_date: datetime, end_date: datetime, filters: Optional[dict] = None
 ) -> float:
     start_date = dt_to_yyyymm(start_date)
     end_date = dt_to_yyyymm(end_date)
@@ -94,12 +94,13 @@ def calc_kpis(
         return paid / mm
     return 0
 
+
 @callback(
-    Output("comparison-pmpm", "children"),
-    Input("comparison-period-dropdown", "value")
+    Output("comparison-pmpm", "children"), Input("comparison-period-dropdown", "value")
 )
 def update_comparison_text(comparison_period):
     return comparison_period
+
 
 @callback(
     Output("pmpm-cost-card", "children"),
@@ -110,11 +111,15 @@ def update_comparison_text(comparison_period):
     Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_click, ccsr_click):
+def update_kpi_cards(
+    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
+):
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
-    
-    start_comp, end_comp = get_comparison_period(start_date, end_date, comparison_period)
+
+    start_comp, end_comp = get_comparison_period(
+        start_date, end_date, comparison_period
+    )
 
     filters = extract_sql_filters(group_click, type_click, ccsr_click)
     pmpm_main = calc_kpis(start_date, end_date, filters)
@@ -123,6 +128,4 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, type_
     # Comparison values (dummy for now)
     expected = 300
     # Return dynamic cards
-    return (
-        kpi_card("PMPM Cost", pmpm_main, pmpm_comp, expected, "comparison-pmpm"),
-    )
+    return (kpi_card("PMPM Cost", pmpm_main, pmpm_comp, expected, "comparison-pmpm"),)

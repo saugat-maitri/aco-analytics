@@ -1,4 +1,4 @@
-sqlite_path = 'app_data.db'  # Always end with .db extension
+sqlite_path = "app_data.db"  # Always end with .db extension
 
 fact_claims_query = """
 SELECT 
@@ -63,5 +63,5 @@ table_list = [
     {"table_name": "FACT_MEMBER_MONTHS", "query": fact_member_months_query},
     {"table_name": "DIM_ENCOUNTER_GROUP", "query": dim_encounter_group_query},
     {"table_name": "DIM_ENCOUNTER_TYPE", "query": dim_encounter_type_query},
-    {"table_name": "DIM_MEMBER", "query": dim_member}
+    {"table_name": "DIM_MEMBER", "query": dim_member},
 ]

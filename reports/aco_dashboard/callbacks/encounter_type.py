@@ -1,10 +1,9 @@
-
 from datetime import datetime
 
 import pandas as pd
 from dash import Input, Output, callback
 
-from components import encounter_type_pmpm_bar
+from components.bar_chart import horizontal_bar_chart
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm, extract_sql_filters
 
@@ -50,13 +49,14 @@ def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFr
         result = sqlite_manager.query(query)
         # Ensure we always return a DataFrame, even if empty
         if result is None:
-            return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
-        
+            return pd.DataFrame(columns=["ENCOUNTER_TYPE", "PMPM"])
+
         return result
-        
+
     except Exception as e:
         print(f"Error in get_encounter_type_pmpm_data: {e}")
-        return pd.DataFrame(columns=['ENCOUNTER_TYPE', 'PMPM'])
+        return pd.DataFrame(columns=["ENCOUNTER_TYPE", "PMPM"])
+
 
 @callback(
     Output("encounter-type-chart", "figure"),
@@ -71,11 +71,23 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
         filters = extract_sql_filters(group_click)
-        
+
         data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
-        
-        return encounter_type_pmpm_bar(data)
-    
+
+        return horizontal_bar_chart(
+            data=data,
+            x="PMPM",
+            y="ENCOUNTER_TYPE",
+            color_fn=["#ed3030" if val > 400 else "#428c8d" for val in data["PMPM"]],
+            text_fn=[f"${v:,.0f}" for v in data["PMPM"]],
+            margin=dict(l=20, r=20, t=20, b=20),
+            showticklabels=False,
+            customdata=data["ENCOUNTER_TYPE"],
+            hovertemplate=(
+                "Encounter Type: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
+            ),
+        )
+
     except Exception as e:
         print(f"Error in update_encounter_type_pmpm_bar: {e}")
         return f"Error loading data: {str(e)}"

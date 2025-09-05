@@ -1,17 +1,18 @@
-
 from datetime import datetime
 
 import pandas as pd
 from dash import Input, Output, callback
 
-from components import pmpm_vs_expected_bar
+from components.bar_chart import horizontal_bar_chart
+from components.no_data_figure import no_data_figure
 from services.database import sqlite_manager
 from services.utils import dt_to_yyyymm
 
 
-def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
-    try:
-        query = f"""
+def get_pmpm_performance_vs_expected_data(
+    start_yyyymm: int, end_yyyymm: int
+) -> pd.DataFrame:
+    query = f"""
         WITH claims_by_encounter_group AS (
             SELECT
                 grp.ENCOUNTER_GROUP,
@@ -38,17 +39,9 @@ def get_pmpm_performance_vs_expected_data(start_yyyymm: int, end_yyyymm: int) ->
         FROM claims_by_encounter_group clm
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
-        """
-        result = sqlite_manager.query(query)
-        # Ensure we always return a DataFrame, even if empty
-        if result is None:
-            return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
-        
-        return result
-        
-    except Exception as e:
-        print(f"Error in get_pmpm_performance_vs_expected_data: {e}")
-        return pd.DataFrame(columns=['ENCOUNTER_GROUP', 'PMPM'])
+    """
+    return sqlite_manager.query(query)
+
 
 @callback(
     Output("encounter-group-chart", "figure"),
@@ -60,11 +53,27 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        
+
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
-        
-        return pmpm_vs_expected_bar(data)
-    
+
+        return horizontal_bar_chart(
+            data=data,
+            x="PMPM",
+            y="ENCOUNTER_GROUP",
+            color_fn=["#ed3030" if val > 400 else "#428c8d" for val in data["PMPM"]],
+            text_fn=["${:,.0f}".format(val) for val in data["PMPM"]],
+            margin=dict(l=20, r=20, t=20, b=20),
+            marker_color="#64AFE0",
+            showticklabels=False,
+            plot_bgcolor="white",
+            clickmode="event+select",
+            customdata=data["ENCOUNTER_GROUP"],
+            textposition="outside",
+            hovertemplate=(
+                "Encounter Group: %{customdata}<br>PMPM: %{text}<extra></extra>"
+            ),
+        )
+
     except Exception as e:
         print(f"Error in update_pmpm_performance_vs_expected: {e}")
-        return f"Error loading data: {str(e)}"
+        return no_data_figure(message=f"Error loading data: {str(e)}")
