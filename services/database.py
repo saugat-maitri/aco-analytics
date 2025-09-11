@@ -133,7 +133,7 @@ class SQLiteManager:
         - Otherwise → load from CSV files.
         """
         conn = sqlite3.connect(self.db_path)
-        env_file = Path(__file__).resolve().parents[1] / ".env"
+        env_file = Path(__file__).resolve().parent.parent / ".env"
         try:
             if env_file.exists():
                 print("Using Snowflake as data source...")
