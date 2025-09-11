@@ -117,7 +117,7 @@ def get_trends_data(filters) -> pd.DataFrame:
             SELECT 
                 clm.YEAR_MONTH,
                 COUNT(DISTINCT clm.ENCOUNTER_ID) AS ENCOUNTERS_COUNT,
-            SUM(clm.PAID_AMOUNT) AS TOTAL_PAID
+                SUM(clm.PAID_AMOUNT) AS TOTAL_PAID
             FROM FACT_CLAIMS clm
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
