@@ -1,11 +1,18 @@
+from datetime import datetime
 from typing import Optional
 
 import pandas as pd
 
 from services.database import sqlite_manager
+from services.utils import dt_to_yyyymm
 
 
-def calc_kpis(start_date: int, end_date: int, filters: Optional[dict] = None) -> float:
+def calc_kpis(
+    start_date: datetime, end_date: datetime, filters: Optional[dict] = None
+) -> float:
+    start_yyyymm = dt_to_yyyymm(start_date)
+    end_yyyymm = dt_to_yyyymm(end_date)
+
     filter_sql = ""
     if filters:
         for col, value in filters.items():
@@ -22,13 +29,13 @@ def calc_kpis(start_date: int, end_date: int, filters: Optional[dict] = None) ->
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
-            WHERE YEAR_MONTH BETWEEN {start_date} AND {end_date}
+            WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             {filter_sql}
         ),
         member_months AS (
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS mm
             FROM FACT_MEMBER_MONTHS
-            WHERE YEAR_MONTH BETWEEN {start_date} AND {end_date}
+            WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
         )
         SELECT
             claims_agg.paid,

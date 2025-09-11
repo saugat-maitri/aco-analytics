@@ -54,11 +54,6 @@ def update_kpi_cards(
         start_date, end_date, comparison_period
     )
 
-    start_date = dt_to_yyyymm(start_date)
-    end_date = dt_to_yyyymm(end_date)
-    start_comp = dt_to_yyyymm(start_comp)
-    end_comp = dt_to_yyyymm(end_comp)
-
     filters = extract_sql_filters(group_click, type_click, ccsr_click)
     pmpm_main = calc_kpis(start_date, end_date, filters)
     pmpm_comp = calc_kpis(start_comp, end_comp, filters)
