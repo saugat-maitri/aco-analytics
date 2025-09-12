@@ -102,11 +102,11 @@ layout = (
                                             dcc.Graph(
                                                 id="condition-ccsr-chart",
                                             ),
-                                        ]
-                                        # style={
-                                        #     "overflowY": "auto",
-                                        #     "maxHeight": "400px",
-                                        # },
+                                        ],
+                                        style={
+                                            "overflowY": "auto",
+                                            "maxHeight": "400px",
+                                        },
                                     )
                                 ),
                             ],
