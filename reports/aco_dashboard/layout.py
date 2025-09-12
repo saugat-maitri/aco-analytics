@@ -5,169 +5,119 @@ from .callbacks import *
 
 register_page(module=__name__, path="/", name="Tuva Dash App", title="Tuva Dash App")
 
-layout = dbc.Container(
-    [
-        html.Div(
+layout = (
+    html.Div(
+        dbc.Row(
             [
-                dbc.Row(
+                dbc.Col(
+                    dbc.Stack(
+                        [
+                            dbc.Col(
+                                id="pmpm-cost-card",
+                                width=12,
+                                className="w-100",
+                            ),
+                            dbc.Card(
+                                dbc.CardBody(
+                                    [
+                                        html.H5(
+                                            "PMPM Trend",
+                                            className="text-teal-blue",
+                                        ),
+                                        dcc.Graph(id="pmpm-trend"),
+                                    ]
+                                ),
+                            ),
+                            dbc.Col(
+                                id="demographic-card",
+                                width=12,
+                                className="w-100",
+                            ),
+                        ],
+                        gap=3,
+                    ),
+                    width=4,
+                ),
+                dbc.Col(
                     [
-                        dbc.Col(
+                        dbc.Stack(
                             [
                                 dbc.Row(
                                     [
                                         dbc.Col(
-                                            id="pmpm-cost-card",
+                                            dbc.Card(
+                                                [
+                                                    dbc.CardBody(
+                                                        [
+                                                            html.H5(
+                                                                "PMPM Performance vs Expected by Encounter Group",
+                                                                className="mb-2 text-teal-blue",
+                                                            ),
+                                                            dcc.Graph(
+                                                                id="encounter-group-chart",
+                                                            ),
+                                                        ]
+                                                    )
+                                                ],
+                                            ),
                                             width=6,
-                                            className="mb-3",
                                         ),
                                         dbc.Col(
-                                            id="demographic-card",
+                                            dbc.Card(
+                                                [
+                                                    dbc.CardBody(
+                                                        [
+                                                            html.H5(
+                                                                "Total Paid by Cohort",
+                                                                className="mb-2 text-teal-blue",
+                                                            ),
+                                                            dcc.Graph(
+                                                                id="paid-by-cohort-chart",
+                                                            ),
+                                                        ]
+                                                    )
+                                                ],
+                                            ),
                                             width=6,
-                                            className="mb-3",
                                         ),
                                     ]
                                 ),
-                                dbc.Card(
-                                    [
-                                        dbc.CardBody(
-                                            [
-                                                html.H5(
-                                                    "PMPM Performance vs Expected by Encounter Group",
-                                                    className="mb-2 text-teal-blue",
-                                                ),
-                                                dcc.Graph(
-                                                    id="encounter-group-chart",
-                                                    style={"maxHeight": "270px"},
-                                                ),
-                                            ]
-                                        )
-                                    ],
-                                    className="mb-3",
-                                ),
-                                dbc.Card(
-                                    [
-                                        dbc.CardBody(
-                                            [
-                                                html.H5(
-                                                    "Cost Drivers Analysis",
-                                                    className="text-teal-blue",
-                                                ),
-                                                dbc.Tabs(
-                                                    [
-                                                        dbc.Tab(
-                                                            html.Div(
-                                                                dcc.Graph(
-                                                                    id="encounter-type-chart",
-                                                                ),
-                                                                style={
-                                                                    "overflowY": "auto",
-                                                                    "maxHeight": "400px",
-                                                                },
-                                                            ),
-                                                            label="Encounter Type",
-                                                        ),
-                                                        dbc.Tab(
-                                                            html.Div(
-                                                                dcc.Graph(
-                                                                    id="condition-ccsr-chart",
-                                                                ),
-                                                                style={
-                                                                    "overflowY": "auto",
-                                                                    "maxHeight": "400px",
-                                                                },
-                                                            ),
-                                                            label="Condition (CCSR)",
-                                                        ),
-                                                        dbc.Tab(
-                                                            html.Div(
-                                                                dcc.Graph(
-                                                                    id="provider-specialty-bar",
-                                                                ),
-                                                                style={
-                                                                    "overflowY": "auto",
-                                                                    "maxHeight": "400px",
-                                                                },
-                                                            ),
-                                                            label="Provider Specialty",
-                                                        ),
-                                                    ]
-                                                ),
-                                            ]
-                                        )
-                                    ]
-                                ),
-                            ],
-                            width=8,
-                        ),
-                        dbc.Col(
-                            [
                                 dbc.Card(
                                     dbc.CardBody(
                                         [
                                             html.H5(
-                                                "Risk Distribution",
-                                                className="text-teal-blue text-nowrap",
-                                            ),
-                                            dcc.Graph(
-                                                id="risk-distribution-card",
+                                                "PMPM By Encounter Group",
+                                                className="mb-2 text-teal-blue",
                                             ),
                                         ]
-                                    ),
-                                    className="mb-3",
+                                    )
                                 ),
-                                dbc.Stack(
-                                    [
-                                        dbc.Card(
-                                            [
-                                                dbc.CardBody(
-                                                    [
-                                                        html.H5(
-                                                            "PMPM Trend",
-                                                            className="text-teal-blue",
-                                                        ),
-                                                        dcc.Graph(id="pmpm-trend"),
-                                                    ]
-                                                )
-                                            ]
-                                        ),
-                                        dbc.Card(
-                                            [
-                                                dbc.CardBody(
-                                                    [
-                                                        html.H5(
-                                                            "PKPY Trend",
-                                                            className="text-teal-blue",
-                                                        ),
-                                                        dcc.Graph(id="pkpy-trend"),
-                                                    ]
-                                                )
-                                            ]
-                                        ),
-                                        dbc.Card(
-                                            [
-                                                dbc.CardBody(
-                                                    [
-                                                        html.H5(
-                                                            "Cost Per Trend",
-                                                            className="text-teal-blue",
-                                                        ),
-                                                        dcc.Graph(id="cost-per-trend"),
-                                                    ]
-                                                )
-                                            ]
-                                        ),
-                                    ],
-                                    gap=2,
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        [
+                                            html.H5(
+                                                "PMPM By CCSR Category (vs Comparison Period)",
+                                                className="mb-2 text-teal-blue",
+                                            ),
+                                            dcc.Graph(
+                                                id="condition-ccsr-chart",
+                                            ),
+                                        ]
+                                        # style={
+                                        #     "overflowY": "auto",
+                                        #     "maxHeight": "400px",
+                                        # },
+                                    )
                                 ),
                             ],
-                            width=4,
-                        ),
+                            gap=3,
+                        )
                     ],
-                    className="mt-4",
+                    width=8,
                 ),
             ],
-            className="bg-light-subtle",
+            className="mt-4",
         ),
-    ],
-    fluid=True,
+        className="bg-light-subtle",
+    ),
 )

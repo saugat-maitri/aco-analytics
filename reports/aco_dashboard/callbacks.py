@@ -41,12 +41,9 @@ def update_comparison_text(comparison_period):
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
-    Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_kpi_cards(
-    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
-):
+def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_click):
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -54,7 +51,7 @@ def update_kpi_cards(
         start_date, end_date, comparison_period
     )
 
-    filters = extract_sql_filters(group_click, type_click, ccsr_click)
+    filters = extract_sql_filters(group_click, ccsr_click)
     pmpm_main = calc_kpis(start_date, end_date, filters)
     pmpm_comp = calc_kpis(start_comp, end_comp, filters)
 
@@ -70,13 +67,10 @@ def update_kpi_cards(
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
-    Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_trend(
-    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
-):
-    filters = extract_sql_filters(group_click, type_click, ccsr_click)
+def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr_click):
+    filters = extract_sql_filters(group_click, ccsr_click)
 
     df = get_trends_data(filters)
 
@@ -108,13 +102,10 @@ def update_pmpm_trend(
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
-    Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pkpy_trend(
-    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
-):
-    filters = extract_sql_filters(group_click, type_click, ccsr_click)
+def update_pkpy_trend(start_date, end_date, comparison_period, group_click, ccsr_click):
+    filters = extract_sql_filters(group_click, ccsr_click)
 
     df = get_trends_data(filters)
     start = pd.to_datetime(start_date).replace(day=1)
@@ -146,13 +137,12 @@ def update_pkpy_trend(
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
-    Input("encounter-type-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
 def update_cost_per_trend(
-    start_date, end_date, comparison_period, group_click, type_click, ccsr_click
+    start_date, end_date, comparison_period, group_click, ccsr_click
 ):
-    filters = extract_sql_filters(group_click, type_click, ccsr_click)
+    filters = extract_sql_filters(group_click, ccsr_click)
 
     df = get_trends_data(filters)
 
