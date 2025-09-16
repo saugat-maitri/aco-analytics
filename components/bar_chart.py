@@ -15,8 +15,10 @@ def vertical_bar_chart(
     plot_bgcolor="white",
     clickmode="event+select",
     customdata=None,
-    textposition="outside",
+    textposition=None,
     hovertemplate=None,
+    hoverbackgroundcolor='white',
+    hovertextcolor='black',
 ):
     """Create and return a vertical bar chart using plotly.
 
@@ -34,6 +36,8 @@ def vertical_bar_chart(
         customdata (array-like, optional): Custom data for hover template. Defaults to None.
         textposition (str, optional): Position of bar text labels ('inside' or 'outside'). Defaults to 'outside'.
         hovertemplate (str, optional): Template for hover text. Defaults to None.
+        hoverbackgroundcolor (str, optional): Background color for hover labels. Defaults to 'white'.
+        hovertextcolor (str, optional): Text color for hover labels. Defaults to 'black'.
 
     Returns:
         plotly.graph_objects.Figure: A plotly vertical bar chart figure.
@@ -56,7 +60,7 @@ def vertical_bar_chart(
 
     max_value = max(y_value) if not y_value.empty else 0
     n_bars = len(x_value) if not x_value.empty else 1
-    y_range_max = max_value * 1.1 if max_value > 0 else 1
+    y_range_max = max_value * 1.2 if max_value > 0 else 1
     bar_height = 40
     min_height = 200
     fig_height = max(
@@ -72,6 +76,10 @@ def vertical_bar_chart(
             text=text_fn,
             textposition=textposition,
             hovertemplate=hovertemplate,
+            hoverlabel=dict(
+                bgcolor=hoverbackgroundcolor,
+                font=dict(color=hovertextcolor)
+            ),
             customdata=custom,
         )
     )
@@ -98,8 +106,10 @@ def horizontal_bar_chart(
     plot_bgcolor="white",
     clickmode="event+select",
     customdata=None,
-    textposition="outside",
+    textposition=None,
     hovertemplate=None,
+    hoverbackgroundcolor='white',
+    hovertextcolor='black',
 ):
     """Create and return a horizontal bar chart using plotly.
 
@@ -117,6 +127,8 @@ def horizontal_bar_chart(
         customdata (array-like, optional): Custom data for hover information. Defaults to None.
         textposition (str, optional): Position of text labels ('inside' or 'outside'). Defaults to 'outside'.
         hovertemplate (str, optional): Template for hover information display. Defaults to None.
+        hoverbackgroundcolor (str, optional): Background color for hover labels. Defaults to 'white'.
+        hovertextcolor (str, optional): Text color for hover labels. Defaults to 'black'.
 
     Returns:
         plotly.graph_objs.Figure: A horizontal bar chart figure object.
@@ -137,7 +149,7 @@ def horizontal_bar_chart(
 
     max_value = max(x_value) if not x_value.empty else 0
     n_bars = len(y_value) if not y_value.empty else 1
-    x_range_max = max_value * 1.1 if max_value > 0 else 1
+    x_range_max = max_value * 1.2 if max_value > 0 else 1
     bar_height = 20
     min_height = 200
     fig_height = max(
@@ -153,6 +165,10 @@ def horizontal_bar_chart(
             text=text_fn,
             textposition=textposition,
             hovertemplate=hovertemplate,
+            hoverlabel=dict(
+                bgcolor=hoverbackgroundcolor,
+                font=dict(color=hovertextcolor)
+            ),
             customdata=custom,
         )
     )

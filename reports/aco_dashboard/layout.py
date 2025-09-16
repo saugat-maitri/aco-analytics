@@ -71,6 +71,7 @@ layout = (
                                                                 "Total Paid by Cohort",
                                                                 className="mb-2 text-teal-blue",
                                                             ),
+                                                            html.Br(),
                                                             dcc.Graph(
                                                                 id="paid-by-cohort-chart",
                                                             ),

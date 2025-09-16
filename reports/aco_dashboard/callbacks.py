@@ -12,6 +12,7 @@ from components.trend_chart import trend_chart
 from services.utils import (
     dt_to_yyyymm,
     extract_sql_filters,
+    format_large_number,
     get_comparison_offset,
     get_comparison_period,
     truncate_text,
@@ -19,6 +20,7 @@ from services.utils import (
 
 from .data import (
     calc_kpis,
+    get_cohort_data,
     get_condition_ccsr_data,
     get_demographic_data,
     get_encounter_type_pmpm_data,
@@ -325,3 +327,40 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
     except Exception as e:
         print(f"Error in update_encounter_type_pmpm_bar: {e}")
         return f"Error loading data: {str(e)}"
+
+
+@callback(
+    Output("paid-by-cohort-chart", "figure"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
+    Input("comparison-period-dropdown", "value"),
+    Input("encounter-group-chart", "selectedData"),
+    Input("condition-ccsr-chart", "selectedData"),
+)
+def update_cohort_data(start_date, end_date, comparison_period, group_click, ccsr):
+    try:
+        # Convert date strings to YYYYMM format for filtering
+        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+
+        filters = extract_sql_filters(group_click, ccsr)
+
+        data = get_cohort_data(start_yyyymm, end_yyyymm, filters)
+
+        return horizontal_bar_chart(
+            data=data,
+            x="total_paid_amount",
+            y="percent_group",
+            text_fn=[f"{format_large_number(v)} {pct:.1f}%" for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])],
+            marker_color="#64AFE0",
+            margin=dict(l=20, r=20, t=20, b=20),
+            showticklabels=True,
+            textposition=None,
+            hovertemplate=(
+                "Group: %{y}<br>Total Paid by Percentile Group: $%{x:,.2f}<br><extra></extra>"
+            ),
+        )
+
+    except Exception as e:
+        print(f"Error in update_cohort_data: {e}")
+        return no_data_figure(message=f"Error loading data: {str(e)}")

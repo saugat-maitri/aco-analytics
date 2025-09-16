@@ -26,6 +26,17 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
 def truncate_text(text, max_length=30):
     return text[:max_length] + "..." if len(text) > max_length else text
 
+def format_large_number(value):
+    """Format large numbers with commas and add $ as prefix."""
+    if value >= 1_000_000_000:
+        return f"${value / 1_000_000_000:.0f}B"
+    elif value >= 1_000_000:
+        return f"${value / 1_000_000:.0f}M"
+    elif value >= 1_000:
+        return f"${value / 1_000:.0f}K"
+    else:
+        return f"${value:.2f}"
+
 
 def get_comparison_period(
     start: datetime, end: datetime, comparison_period: str
