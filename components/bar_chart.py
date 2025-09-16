@@ -1,3 +1,5 @@
+import pandas as pd
+import plotly.express as px
 import plotly.graph_objs as go
 
 from components.no_data_figure import no_data_figure
@@ -180,4 +182,63 @@ def horizontal_bar_chart(
         clickmode=clickmode,
         height=fig_height,
     )
+    return fig
+
+
+def stacked_percentage_bar(
+    data: pd.DataFrame,
+    x: str,
+    group_col: str,
+    height: int = 120,
+):
+    """Create and return a stacked percentage bar chart using plotly.
+
+    Args:
+        data (pandas.DataFrame): Input DataFrame containing the data to plot.
+        x (str): Column name containing numeric values to be represented as percentages.
+        group_col (str): Column name containing group labels for each bar segment.
+        height (int, optional): Height of the chart in pixels. Defaults to 120.
+
+    Returns:
+        plotly.graph_objects.Figure: A plotly stacked percentage bar chart figure.
+    """
+    color_scheme = px.colors.qualitative.Set2
+
+    total = data[x].sum()
+    data["PCT"] = (data[x] / total * 100).round(1) if total > 0 else 0
+
+    fig = go.Figure()
+
+    for i, row in data.iterrows():
+        fig.add_bar(
+            x=[row["PCT"]],
+            y=[""],
+            orientation="h",
+            name=row[group_col],
+            text=[f"{row['PCT']:.0f}%"],
+            textposition="inside",
+            insidetextanchor="middle",
+            customdata=[[x, row[group_col]]],
+            hovertemplate=(
+                "<b>%{customdata[1]}</b><br>%{customdata[0]}: %{x:,.2f}%<extra></extra>"
+            ),
+            marker_color=color_scheme[i % len(color_scheme)],
+        )
+
+    fig.update_layout(
+        barmode="stack",
+        margin=dict(l=20, r=20, t=40, b=20),
+        xaxis=dict(automargin=True, showgrid=False, zeroline=False, ticksuffix="%"),
+        yaxis=dict(showticklabels=False),
+        plot_bgcolor="white",
+        height=height,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.1,
+            xanchor="center",
+            x=0.5,
+        ),
+    )
+
     return fig

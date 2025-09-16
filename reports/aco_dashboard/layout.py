@@ -90,6 +90,9 @@ layout = (
                                                 "PMPM By Encounter Group",
                                                 className="mb-2 text-teal-blue",
                                             ),
+                                            dcc.Graph(
+                                                id="encounter-group-percentage-chart",
+                                            ),
                                         ]
                                     )
                                 ),
