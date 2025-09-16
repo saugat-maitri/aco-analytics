@@ -3,8 +3,7 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
-from components.bar_chart import horizontal_bar_chart
-from components.box_plot import box_plot
+from components.bar_chart import horizontal_bar_chart, stacked_percentage_bar
 from components.demographics_card import demographics_card
 from components.kpi_card import kpi_card
 from components.no_data_figure import no_data_figure
@@ -23,7 +22,6 @@ from .data import (
     get_demographic_data,
     get_encounter_type_pmpm_data,
     get_pmpm_performance_vs_expected_data,
-    get_risk_distribution_data,
     get_trends_data,
 )
 
@@ -97,84 +95,6 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr
 
 
 @callback(
-    Output("pkpy-trend", "figure"),
-    Input("date-picker-input", "start_date"),
-    Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value"),
-    Input("encounter-group-chart", "selectedData"),
-    Input("condition-ccsr-chart", "selectedData"),
-)
-def update_pkpy_trend(start_date, end_date, comparison_period, group_click, ccsr_click):
-    filters = extract_sql_filters(group_click, ccsr_click)
-
-    df = get_trends_data(filters)
-    start = pd.to_datetime(start_date).replace(day=1)
-    end = pd.to_datetime(end_date).replace(day=1)
-    selected_months = pd.date_range(start=start, end=end, freq="MS")
-
-    current_data = []
-    if not df.empty:
-        df["YEAR_MONTH"] = pd.to_datetime(df["YEAR_MONTH"].astype(str), format="%Y%m")
-        current_df = df[df["YEAR_MONTH"].isin(selected_months)]
-        current_data = list(zip(current_df["YEAR_MONTH"], current_df["PKPY"]))
-
-    comparison_data = []
-    for month in selected_months:
-        comp_range = get_comparison_offset(month, comparison_period, selected_months)
-        comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
-        total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
-        total_members = comp_df["MEMBERS_COUNT"].sum()
-
-        avg_pkpy = (total_encounters / total_members) * 12000 if total_members else 0
-        comparison_data.append((month, avg_pkpy))
-
-    return trend_chart(current_data, comparison_data)
-
-
-@callback(
-    Output("cost-per-trend", "figure"),
-    Input("date-picker-input", "start_date"),
-    Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value"),
-    Input("encounter-group-chart", "selectedData"),
-    Input("condition-ccsr-chart", "selectedData"),
-)
-def update_cost_per_trend(
-    start_date, end_date, comparison_period, group_click, ccsr_click
-):
-    filters = extract_sql_filters(group_click, ccsr_click)
-
-    df = get_trends_data(filters)
-
-    start = pd.to_datetime(start_date).replace(day=1)
-    end = pd.to_datetime(end_date).replace(day=1)
-    selected_months = pd.date_range(start=start, end=end, freq="MS")
-
-    current_data = []
-    if not df.empty:
-        df["YEAR_MONTH"] = pd.to_datetime(df["YEAR_MONTH"].astype(str), format="%Y%m")
-        current_df = df[df["YEAR_MONTH"].isin(selected_months)]
-        current_data = list(
-            zip(current_df["YEAR_MONTH"], current_df["COST_PER_ENCOUNTER"])
-        )
-    comparison_data = []
-    for month in selected_months:
-        comp_range = get_comparison_offset(month, comparison_period, selected_months)
-        comp_df = df[df["YEAR_MONTH"].isin(comp_range)]
-
-        if not comp_df.empty:
-            total_paid = comp_df["TOTAL_PAID"].sum()
-            total_encounters = comp_df["ENCOUNTERS_COUNT"].sum()
-
-            avg_cost_per_encounter = (
-                total_paid / total_encounters if total_encounters else 0
-            )
-            comparison_data.append((month, avg_cost_per_encounter))
-
-    return trend_chart(current_data, comparison_data)
-
-
-@callback(
     Output("condition-ccsr-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
@@ -229,34 +149,6 @@ def update_demographic_data(start_date, end_date):
 
 
 @callback(
-    Output("risk-distribution-card", "figure"),
-    Input("date-picker-input", "start_date"),
-    Input("date-picker-input", "end_date"),
-)
-def update_risk_data(start_date: str, end_date: str):
-    """Prepare risk distribution visualization for given date range."""
-    try:
-        # Convert date strings to YYYYMM format
-        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
-        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-
-        # Fetch data
-        risk_data = get_risk_distribution_data(start_yyyymm, end_yyyymm)
-
-        fig = box_plot(
-            data=risk_data,
-            y="NORMALIZED_RISK_SCORE",
-            points="outliers",
-            show_line=True,
-        )
-        return fig
-
-    except Exception as e:
-        print(f"Error in update_risk_data: {e}")
-        return no_data_figure(message=f"Error loading data: {str(e)}")
-
-
-@callback(
     Output("encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
@@ -289,6 +181,31 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
 
     except Exception as e:
         print(f"Error in update_pmpm_performance_vs_expected: {e}")
+        return no_data_figure(message=f"Error loading data: {str(e)}")
+
+
+@callback(
+    Output("encounter-group-percentage-chart", "figure"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
+)
+def update_encounter_group_percentage_chart(start_date, end_date):
+    try:
+        # Convert date strings to YYYYMM format for filtering
+        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+
+        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
+
+        return stacked_percentage_bar(
+            data=data,
+            x="PMPM",
+            group_col="ENCOUNTER_GROUP",
+            height=120,
+        )
+
+    except Exception as e:
+        print(f"Error in update_encounter_group_percentage_chart: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
 
 
