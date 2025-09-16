@@ -199,7 +199,7 @@ def stacked_percentage_bar(
             y=[""],
             orientation="h",
             name=row[group_col],
-            text=data["PCT"].apply(lambda v: f"{v:.0f}%"),
+            text=[f"{row['PCT']:.0f}%"],
             textposition="inside",
             insidetextanchor="middle",
             customdata=[[x, row[group_col]]],
