@@ -162,7 +162,7 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
         )
         SELECT 
-            CASE WHEN cc.CCSR_CATEGORY_DESCRIPTION IS NULL THEN 'Others' ELSE cc.CCSR_CATEGORY_DESCRIPTION END AS CCSR_CATEGORY_DESCRIPTION,
+            CASE WHEN cc.CCSR_CATEGORY_DESCRIPTION IS NULL THEN 'other' ELSE cc.CCSR_CATEGORY_DESCRIPTION END AS CCSR_CATEGORY_DESCRIPTION,
             cc.TOTAL_PAID,
             CASE 
                 WHEN mm.MEMBER_MONTHS_COUNT > 0 
@@ -248,5 +248,90 @@ def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFr
         FROM claims_by_encounter_type clm
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
+    """
+    return sqlite_manager.query(query)
+
+
+def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
+    filter_sql = ""
+    if filters:
+        for col, value in filters.items():
+            if value is not None:
+                filter_sql += f" AND {col} = '{value}'"
+            else:
+                filter_sql += f" AND {col} IS NULL"
+    query = f"""
+        WITH member_totals AS (
+            SELECT 
+                person_id,
+                SUM(fc.PAID_AMOUNT) AS total_paid
+            FROM fact_claims fc
+            LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                ON fc.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+            LEFT JOIN DIM_ENCOUNTER_TYPE type
+                ON fc.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
+            WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
+            {filter_sql}
+            GROUP BY person_id
+        ),
+
+        total_person_count AS (
+            SELECT COUNT(*) AS total_person_count
+            FROM member_totals
+        ),
+
+        ranked_members AS (
+            SELECT
+                mt.person_id,
+                mt.total_paid,
+                ROW_NUMBER() OVER(ORDER BY mt.total_paid DESC) AS rn,
+                tpc.total_person_count
+            FROM member_totals mt
+            CROSS JOIN total_person_count tpc
+        ),
+
+        group_summary AS (
+            SELECT
+                COALESCE(SUM(CASE WHEN rn <= CEIL(total_person_count * 0.01) THEN total_paid END), 0) AS top_1_total,
+                COALESCE(COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.01) THEN 1 END), 0) AS top_1_count,
+
+                COALESCE(SUM(CASE WHEN rn <= CEIL(total_person_count * 0.05) THEN total_paid END), 0) AS top_5_total,
+                COALESCE(COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.05) THEN 1 END), 0) AS top_5_count,
+
+                COALESCE(SUM(CASE WHEN rn <= CEIL(total_person_count * 0.20) THEN total_paid END), 0) AS top_20_total,
+                COALESCE(COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.20) THEN 1 END), 0) AS top_20_count,
+
+                SUM(total_paid) AS all_total,
+                COUNT(*) AS all_count
+            FROM ranked_members
+        )
+        
+        SELECT
+            'Top 1%' AS percent_group,
+            top_1_total AS total_paid_amount,
+            top_1_count AS member_count,
+            ROUND(100.0 * top_1_total / all_total, 2) AS percent_of_total
+        FROM group_summary 
+        UNION ALL
+        SELECT
+            'Top 5%' AS percent_group,
+            top_5_total AS total_paid_amount,
+            top_5_count AS member_count,
+            ROUND(100.0 * top_5_total / all_total, 2) AS percent_of_total
+        FROM group_summary
+        UNION ALL
+        SELECT
+            'Top 20%' AS percent_group,
+            top_20_total AS total_paid_amount,
+            top_20_count AS member_count,
+            ROUND(100.0 * top_20_total / all_total, 2) AS percent_of_total
+        FROM group_summary
+        UNION ALL
+        SELECT
+            'All Members' AS percent_group,
+            all_total AS total_paid_amount,
+            all_count AS member_count,
+            100.0 AS percent_of_total
+        FROM group_summary
     """
     return sqlite_manager.query(query)

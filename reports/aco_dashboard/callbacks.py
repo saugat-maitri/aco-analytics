@@ -11,6 +11,7 @@ from components.trend_chart import trend_chart
 from services.utils import (
     dt_to_yyyymm,
     extract_sql_filters,
+    format_large_number,
     get_comparison_offset,
     get_comparison_period,
     truncate_text,
@@ -18,6 +19,7 @@ from services.utils import (
 
 from .data import (
     calc_kpis,
+    get_cohort_data,
     get_condition_ccsr_data,
     get_demographic_data,
     get_encounter_type_pmpm_data,
@@ -115,11 +117,9 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date):
             x="PMPM",
             y="TRUNCATED_CATEGORY",
             text_fn=[f"${v:,.0f}" for v in ccsr_data["PMPM"]],
-            marker_color="#64AFE0",
-            margin=dict(l=20, r=20, t=20, b=0),
-            showticklabels=False,
-            customdata=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
-            hovertemplate=(
+            show_tick_labels=False,
+            custom_data=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
+            hover_template=(
                 "CCSR Category: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
         )
@@ -193,17 +193,17 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
             data=data,
             x="PMPM",
             y="ENCOUNTER_GROUP",
-            color_fn=["#ed3030" if val > 400 else "#428c8d" for val in data["PMPM"]],
             text_fn=["${:,.0f}".format(val) for val in data["PMPM"]],
-            margin=dict(l=20, r=20, t=20, b=20),
-            marker_color="#64AFE0",
-            showticklabels=False,
+            bar_height=40,
+            show_tick_labels=False,
             plot_bgcolor="white",
-            clickmode="event+select",
-            customdata=data["ENCOUNTER_GROUP"],
-            textposition="outside",
-            hovertemplate=(
-                "Encounter Group: %{customdata}<br>PMPM: %{text}<extra></extra>"
+            click_mode="event+select",
+            custom_data=data["ENCOUNTER_GROUP"],
+            text_position="outside",
+            hover_template=(
+                "    Encounter Group: %{customdata}   <br>"
+                "    PMPM: %{text}    <br><br>"
+                "<extra></extra>"
             ),
         )
 
@@ -257,12 +257,10 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
             data=data,
             x="PMPM",
             y="ENCOUNTER_TYPE",
-            color_fn=["#ed3030" if val > 400 else "#428c8d" for val in data["PMPM"]],
             text_fn=[f"${v:,.0f}" for v in data["PMPM"]],
-            margin=dict(l=20, r=20, t=20, b=20),
-            showticklabels=False,
-            customdata=data["ENCOUNTER_TYPE"],
-            hovertemplate=(
+            show_tick_labels=False,
+            custom_data=data["ENCOUNTER_TYPE"],
+            hover_template=(
                 "Encounter Type: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
         )
@@ -270,3 +268,44 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
     except Exception as e:
         print(f"Error in update_encounter_type_pmpm_bar: {e}")
         return f"Error loading data: {str(e)}"
+
+
+@callback(
+    Output("paid-by-cohort-chart", "figure"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
+    Input("comparison-period-dropdown", "value"),
+    Input("encounter-group-chart", "selectedData"),
+    Input("condition-ccsr-chart", "selectedData"),
+)
+def update_cohort_data(start_date, end_date, comparison_period, group_click, ccsr):
+    try:
+        # Convert date strings to YYYYMM format for filtering
+        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+        filters = extract_sql_filters(group_click, None, ccsr)
+
+        data = get_cohort_data(start_yyyymm, end_yyyymm, filters)
+
+        return horizontal_bar_chart(
+            data=data,
+            x="total_paid_amount",
+            y="percent_group",
+            text_fn=[
+                f"{format_large_number(v)} {pct:.1f}%"
+                for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])
+            ],
+            bar_height=40,
+            click_mode="event",
+            show_tick_labels=True,
+            text_position=None,
+            hover_template=(
+                "   Group: %{y}   <br>"
+                "   Total Paid by Percentile Group: $%{x:,.2f}   <br>"
+                "<extra></extra>"
+            ),
+        )
+
+    except Exception as e:
+        print(f"Error in update_cohort_data: {e}")
+        return no_data_figure(message=f"Error loading data: {str(e)}")
