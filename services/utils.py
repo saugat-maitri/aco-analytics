@@ -44,7 +44,7 @@ def format_large_number(value):
         str: A formatted string with dollar sign prefix and appropriate suffix
             Examples:
             - 1234567890 -> "$1B"
-            - 1234567 -> "$1M" 
+            - 1234567 -> "$1M"
             - 1234 -> "$1K"
             - 123.45 -> "$123.45"
     """
