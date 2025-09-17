@@ -50,13 +50,14 @@ layout = (
                                                     dbc.CardBody(
                                                         [
                                                             html.H5(
-                                                                "PMPM Performance vs Expected by Encounter Group",
+                                                                "PMPM by Encounter Group (vs Expected)",
                                                                 className="mb-2 text-teal-blue",
                                                             ),
                                                             dcc.Graph(
                                                                 id="encounter-group-chart",
                                                             ),
-                                                        ]
+                                                        ],
+                                                        className="p-2",
                                                     )
                                                 ],
                                             ),
@@ -74,7 +75,8 @@ layout = (
                                                             dcc.Graph(
                                                                 id="paid-by-cohort-chart",
                                                             ),
-                                                        ]
+                                                        ],
+                                                        className="p-2",
                                                     )
                                                 ],
                                             ),
