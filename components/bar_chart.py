@@ -12,7 +12,8 @@ def vertical_bar_chart(
     color_fn=None,
     text_fn=None,
     margin=None,
-    marker_color=None,
+    marker_color="#64AFE0",
+    bar_height=20,
     showticklabels=True,
     plot_bgcolor="white",
     clickmode="event+select",
@@ -32,6 +33,7 @@ def vertical_bar_chart(
         text_fn (callable, optional): Function to determine bar text labels based on y values. Defaults to None.
         margin (dict, optional): Chart margins in format {l, r, t, b}. Defaults to {l:20, r:20, t:20, b:20}.
         marker_color (str/list, optional): Color(s) for bars. Used if color_fn is None. Defaults to None.
+        bar_height (int, optional): Height of each bar in pixels. Defaults to 20.
         showticklabels (bool, optional): Whether to show tick labels on y-axis. Defaults to True.
         plot_bgcolor (str, optional): Background color of the plot. Defaults to 'white'.
         clickmode (str, optional): Chart click interaction mode. Defaults to 'event+select'.
@@ -63,7 +65,6 @@ def vertical_bar_chart(
     max_value = max(y_value) if not y_value.empty else 0
     n_bars = len(x_value) if not x_value.empty else 1
     y_range_max = max_value * 1.2 if max_value > 0 else 1
-    bar_height = 40
     min_height = 200
     fig_height = max(
         min_height, n_bars * bar_height + 100
@@ -103,7 +104,8 @@ def horizontal_bar_chart(
     color_fn=None,
     text_fn=None,
     margin=None,
-    marker_color=None,
+    marker_color="#64AFE0",
+    bar_height = 20,
     showticklabels=True,
     plot_bgcolor="white",
     clickmode="event+select",
@@ -122,7 +124,8 @@ def horizontal_bar_chart(
         color_fn (callable, optional): Function to determine bar colors based on x values. Defaults to None.
         text_fn (callable, optional): Function to determine text display for each bar based on x values. Defaults to None.
         margin (dict, optional): Chart margins in format {l, r, t, b}. Defaults to {l:20, r:20, t:20, b:20}.
-        marker_color (str, optional): Color(s) for bars. Used if color_fn is None. Defaults to None.
+        marker_color (str, optional): Color(s) for bars. Used if color_fn is None.
+        bar_height (int, optional): Height of each bar in pixels. Defaults to 20.
         showticklabels (bool, optional): Whether to show x-axis tick labels. Defaults to True.
         plot_bgcolor (str, optional): Background color of the plot. Defaults to 'white'.
         clickmode (str, optional): Mode for handling click events. Defaults to 'event+select'.
@@ -152,7 +155,6 @@ def horizontal_bar_chart(
     max_value = max(x_value) if not x_value.empty else 0
     n_bars = len(y_value) if not y_value.empty else 1
     x_range_max = max_value * 1.2 if max_value > 0 else 1
-    bar_height = 20
     min_height = 200
     fig_height = max(
         min_height, n_bars * bar_height + 100
