@@ -20,8 +20,8 @@ def vertical_bar_chart(
     custom_data=None,
     text_position=None,
     hover_template=None,
-    hover_backgroundcolor='white',
-    hover_textcolor='black',
+    hover_backgroundcolor="white",
+    hover_textcolor="black",
 ):
     """Create and return a vertical bar chart using plotly.
 
@@ -80,8 +80,7 @@ def vertical_bar_chart(
             textposition=text_position,
             hovertemplate=hover_template,
             hoverlabel=dict(
-                bgcolor=hover_backgroundcolor,
-                font=dict(color=hover_textcolor)
+                bgcolor=hover_backgroundcolor, font=dict(color=hover_textcolor)
             ),
             customdata=custom,
         )
@@ -105,15 +104,15 @@ def horizontal_bar_chart(
     text_fn=None,
     margin=dict(l=20, r=20, t=0, b=0, pad=5),
     marker_color="#64AFE0",
-    bar_height = 20,
+    bar_height=20,
     show_tick_labels=True,
     plot_bgcolor="white",
     click_mode="event+select",
     custom_data=None,
     text_position=None,
     hover_template=None,
-    hover_backgroundcolor='white',
-    hover_textcolor='black',
+    hover_backgroundcolor="white",
+    hover_textcolor="black",
 ):
     """Create and return a horizontal bar chart using plotly.
 
@@ -170,8 +169,7 @@ def horizontal_bar_chart(
             textposition=text_position,
             hovertemplate=hover_template,
             hoverlabel=dict(
-                bgcolor=hover_backgroundcolor,
-                font=dict(color=hover_textcolor)
+                bgcolor=hover_backgroundcolor, font=dict(color=hover_textcolor)
             ),
             customdata=custom,
         )

@@ -19,7 +19,9 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
         filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
     if ccsr_click and ccsr_click.get("points"):
         ccsr_data = ccsr_click["points"][0]["customdata"]
-        filters["CCSR_CATEGORY_DESCRIPTION"] = ccsr_data if ccsr_data != "other" else None
+        filters["CCSR_CATEGORY_DESCRIPTION"] = (
+            ccsr_data if ccsr_data != "other" else None
+        )
     return filters
 
 
@@ -27,8 +29,25 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
 def truncate_text(text, max_length=30):
     return text[:max_length] + "..." if len(text) > max_length else text
 
+
 def format_large_number(value):
-    """Format large numbers with commas and add $ as prefix."""
+    """Format large numbers with appropriate suffixes and dollar sign prefix.
+
+    This function takes a numeric value and formats it with a dollar sign prefix
+    and appropriate suffix (B for billions, M for millions, K for thousands).
+    Numbers less than 1000 are formatted with 2 decimal places.
+
+    Args:
+        value (float): The number to be formatted
+
+    Returns:
+        str: A formatted string with dollar sign prefix and appropriate suffix
+            Examples:
+            - 1234567890 -> "$1B"
+            - 1234567 -> "$1M" 
+            - 1234 -> "$1K"
+            - 123.45 -> "$123.45"
+    """
     if value >= 1_000_000_000:
         return f"${value / 1_000_000_000:.0f}B"
     elif value >= 1_000_000:

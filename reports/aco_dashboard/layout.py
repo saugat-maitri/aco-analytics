@@ -57,7 +57,7 @@ layout = (
                                                                 id="encounter-group-chart",
                                                             ),
                                                         ],
-                                                        className="p-2"
+                                                        className="p-2",
                                                     )
                                                 ],
                                             ),
@@ -76,7 +76,7 @@ layout = (
                                                                 id="paid-by-cohort-chart",
                                                             ),
                                                         ],
-                                                        className="p-2"
+                                                        className="p-2",
                                                     )
                                                 ],
                                             ),

@@ -116,7 +116,7 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date):
             data=ccsr_data,
             x="PMPM",
             y="TRUNCATED_CATEGORY",
-            text_fn=[f"${v:,.0f}" for v in ccsr_data["PMPM"]],            
+            text_fn=[f"${v:,.0f}" for v in ccsr_data["PMPM"]],
             show_tick_labels=False,
             custom_data=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
             hover_template=(
@@ -164,7 +164,7 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
         return horizontal_bar_chart(
             data=data,
             x="PMPM",
-            y="ENCOUNTER_GROUP", 
+            y="ENCOUNTER_GROUP",
             text_fn=["${:,.0f}".format(val) for val in data["PMPM"]],
             bar_height=40,
             show_tick_labels=False,
@@ -229,7 +229,7 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
             data=data,
             x="PMPM",
             y="ENCOUNTER_TYPE",
-            text_fn=[f"${v:,.0f}" for v in data["PMPM"]],            
+            text_fn=[f"${v:,.0f}" for v in data["PMPM"]],
             show_tick_labels=False,
             custom_data=data["ENCOUNTER_TYPE"],
             hover_template=(
@@ -263,9 +263,12 @@ def update_cohort_data(start_date, end_date, comparison_period, group_click, ccs
             data=data,
             x="total_paid_amount",
             y="percent_group",
-            text_fn=[f"{format_large_number(v)} {pct:.1f}%" for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])],
-            bar_height=40, 
-            click_mode="event",           
+            text_fn=[
+                f"{format_large_number(v)} {pct:.1f}%"
+                for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])
+            ],
+            bar_height=40,
+            click_mode="event",
             show_tick_labels=True,
             text_position=None,
             hover_template=(
