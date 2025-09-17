@@ -28,10 +28,35 @@ layout = (
                                     ]
                                 ),
                             ),
-                            dbc.Col(
-                                id="demographic-card",
-                                width=12,
-                                className="w-100",
+                            dbc.Card(
+                                dbc.CardBody(
+                                    [
+                                        html.H5(
+                                            "Demographics",
+                                            className="text-teal-blue mb-3",
+                                        ),
+                                        dbc.Row(
+                                            [
+                                                dbc.Col(
+                                                    id="members-card",
+                                                    width=4,
+                                                    className="w-100",
+                                                ),
+                                                dbc.Col(
+                                                    id="percentage-female-card",
+                                                    width=4,
+                                                    className="w-100",
+                                                ),
+                                                dbc.Col(
+                                                    id="risk-score-card",
+                                                    width=4,
+                                                    className="w-100",
+                                                ),
+                                            ],
+                                            className="d-flex flex-column gap-3",
+                                        ),
+                                    ]
+                                )
                             ),
                         ],
                         gap=3,

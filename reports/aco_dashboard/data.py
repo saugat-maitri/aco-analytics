@@ -52,7 +52,10 @@ def calc_kpis(
     return 0
 
 
-def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
+def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFrame:
+    start_yyyymm = dt_to_yyyymm(start_date)
+    end_yyyymm = dt_to_yyyymm(end_date)
+
     query = f"""
         WITH member_month_details AS (
             SELECT 
@@ -69,35 +72,17 @@ def get_demographic_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         ),
         member_month_counts AS (
             SELECT
-                COUNT(DISTINCT MEMBER_MONTH_ID) AS TOTAL_MEMBER_MONTHS,
-                COUNT(DISTINCT YEAR_MONTH) AS TOTAL_MONTHS
+                COUNT(DISTINCT MEMBER_MONTH_ID) AS TOTAL_MEMBER_MONTHS
             FROM member_month_details
         )
         SELECT 
             mmc.TOTAL_MEMBER_MONTHS,
-            mmc.TOTAL_MEMBER_MONTHS * 1.0 / mmc.TOTAL_MONTHS AS AVG_MEMBERS_PER_MONTH,
             AVG(mmd.AGE) AS AVG_AGE,
             100.0 * SUM(CASE WHEN LOWER(mmd.SEX) = 'female' THEN 1 ELSE 0 END) 
                 / mmc.TOTAL_MEMBER_MONTHS AS PERCENT_FEMALE,
             AVG(mmd.NORMALIZED_RISK_SCORE) AS AVG_RISK_SCORE
         FROM member_month_details mmd
         CROSS JOIN member_month_counts mmc;
-    """
-    return sqlite_manager.query(query)
-
-
-def get_risk_distribution_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
-    """Fetch risk distribution data between start_yyyymm and end_yyyymm.
-
-    Returns:
-        - DataFrame if query succeeds
-        - None if query fails
-    """
-    query = f"""
-        SELECT 
-            NORMALIZED_RISK_SCORE
-        FROM fact_member_months
-        WHERE YEAR_MONTH BETWEEN '{start_yyyymm}' AND '{end_yyyymm}'
     """
     return sqlite_manager.query(query)
 
