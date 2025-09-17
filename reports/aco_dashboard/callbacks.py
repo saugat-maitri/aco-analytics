@@ -117,9 +117,9 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date):
             x="PMPM",
             y="TRUNCATED_CATEGORY",
             text_fn=[f"${v:,.0f}" for v in ccsr_data["PMPM"]],            
-            showticklabels=False,
-            customdata=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
-            hovertemplate=(
+            show_tick_labels=False,
+            custom_data=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
+            hover_template=(
                 "CCSR Category: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
         )
@@ -166,13 +166,13 @@ def update_pmpm_performance_vs_expected(start_date, end_date):
             x="PMPM",
             y="ENCOUNTER_GROUP", 
             text_fn=["${:,.0f}".format(val) for val in data["PMPM"]],
-            bar_height=40,            
-            showticklabels=False,
+            bar_height=40,
+            show_tick_labels=False,
             plot_bgcolor="white",
-            clickmode="event+select",
-            customdata=data["ENCOUNTER_GROUP"],
-            textposition="outside",
-            hovertemplate=(
+            click_mode="event+select",
+            custom_data=data["ENCOUNTER_GROUP"],
+            text_position="outside",
+            hover_template=(
                 "    Encounter Group: %{customdata}   <br>"
                 "    PMPM: %{text}    <br><br>"
                 "<extra></extra>"
@@ -230,9 +230,9 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
             x="PMPM",
             y="ENCOUNTER_TYPE",
             text_fn=[f"${v:,.0f}" for v in data["PMPM"]],            
-            showticklabels=False,
-            customdata=data["ENCOUNTER_TYPE"],
-            hovertemplate=(
+            show_tick_labels=False,
+            custom_data=data["ENCOUNTER_TYPE"],
+            hover_template=(
                 "Encounter Type: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
         )
@@ -265,10 +265,10 @@ def update_cohort_data(start_date, end_date, comparison_period, group_click, ccs
             y="percent_group",
             text_fn=[f"{format_large_number(v)} {pct:.1f}%" for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])],
             bar_height=40, 
-            clickmode="event",           
-            showticklabels=True,
-            textposition=None,
-            hovertemplate=(
+            click_mode="event",           
+            show_tick_labels=True,
+            text_position=None,
+            hover_template=(
                 "   Group: %{y}   <br>"
                 "   Total Paid by Percentile Group: $%{x:,.2f}   <br>"
                 "<extra></extra>"
