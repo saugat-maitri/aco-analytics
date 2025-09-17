@@ -130,18 +130,46 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date):
 
 
 @callback(
-    Output("demographic-card", "children"),
+    Output("members-card", "children"),
+    Output("percentage-female-card", "children"),
+    Output("risk-score-card", "children"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("comparison-period-dropdown", "value"),
 )
-def update_demographic_data(start_date, end_date):
+def update_demographic_data(start_date, end_date, comparison_period):
     try:
-        # Convert date strings to YYYYMM format for filtering
-        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
-        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-        demographic_data = get_demographic_data(start_yyyymm, end_yyyymm)
-        return demographics_card(demographic_data)
+        comp_start_date, comp_end_date = get_comparison_period(
+            start_date, end_date, comparison_period
+        )
+
+        demographic_data = get_demographic_data(start_date, end_date)
+        comp_demographic_data = get_demographic_data(comp_start_date, comp_end_date)
+
+        return [
+            demographics_card(
+                "Members",
+                demographic_data.get("TOTAL_MEMBER_MONTHS", 0).iloc[0],
+                comp_demographic_data.get("TOTAL_MEMBER_MONTHS", 0).iloc[0],
+                comparison_period,
+            ),
+            demographics_card(
+                "Female %",
+                round(demographic_data.get("PERCENT_FEMALE", 0).iloc[0]),
+                round(comp_demographic_data.get("PERCENT_FEMALE", 0).iloc[0]),
+                comparison_period,
+                value_suffix="%",
+            ),
+            demographics_card(
+                "Risk Score",
+                round(demographic_data.get("AVG_RISK_SCORE", 0).iloc[0], 2),
+                round(comp_demographic_data.get("AVG_RISK_SCORE", 0).iloc[0], 2),
+                comparison_period,
+            ),
+        ]
 
     except Exception as e:
         print(f"Error in update_demographic_data: {e}")
