@@ -177,7 +177,7 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
         )
         SELECT 
-            CASE WHEN cc.CCSR_CATEGORY_DESCRIPTION IS NULL THEN 'Others' ELSE cc.CCSR_CATEGORY_DESCRIPTION END AS CCSR_CATEGORY_DESCRIPTION,
+            CASE WHEN cc.CCSR_CATEGORY_DESCRIPTION IS NULL THEN 'other' ELSE cc.CCSR_CATEGORY_DESCRIPTION END AS CCSR_CATEGORY_DESCRIPTION,
             cc.TOTAL_PAID,
             CASE 
                 WHEN mm.MEMBER_MONTHS_COUNT > 0 
@@ -273,6 +273,8 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
         for col, value in filters.items():
             if value is not None:
                 filter_sql += f" AND {col} = '{value}'"
+            else:
+                filter_sql += f" AND {col} IS NULL"
     query = f"""
         WITH member_totals AS (
             SELECT 
@@ -281,6 +283,8 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
             FROM fact_claims fc
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON fc.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+            LEFT JOIN DIM_ENCOUNTER_TYPE type
+                ON fc.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
             WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
             {filter_sql}
             GROUP BY person_id
@@ -303,14 +307,14 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
 
         group_summary AS (
             SELECT
-                SUM(CASE WHEN rn <= CEIL(total_person_count * 0.01) THEN total_paid END) AS top_1_total,
-                COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.01) THEN 1 END) AS top_1_count,
+                COALESCE(SUM(CASE WHEN rn <= CEIL(total_person_count * 0.01) THEN total_paid END), 0) AS top_1_total,
+                COALESCE(COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.01) THEN 1 END), 0) AS top_1_count,
 
-                SUM(CASE WHEN rn <= CEIL(total_person_count * 0.05) THEN total_paid END) AS top_5_total,
-                COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.05) THEN 1 END) AS top_5_count,
+                COALESCE(SUM(CASE WHEN rn <= CEIL(total_person_count * 0.05) THEN total_paid END), 0) AS top_5_total,
+                COALESCE(COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.05) THEN 1 END), 0) AS top_5_count,
 
-                SUM(CASE WHEN rn <= CEIL(total_person_count * 0.20) THEN total_paid END) AS top_20_total,
-                COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.20) THEN 1 END) AS top_20_count,
+                COALESCE(SUM(CASE WHEN rn <= CEIL(total_person_count * 0.20) THEN total_paid END), 0) AS top_20_total,
+                COALESCE(COUNT(CASE WHEN rn <= CEIL(total_person_count * 0.20) THEN 1 END), 0) AS top_20_count,
 
                 SUM(total_paid) AS all_total,
                 COUNT(*) AS all_count

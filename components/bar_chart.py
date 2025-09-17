@@ -11,7 +11,7 @@ def vertical_bar_chart(
     y,
     color_fn=None,
     text_fn=None,
-    margin=None,
+    margin=dict(l=20, r=20, t=0, b=0, pad=5),
     marker_color="#64AFE0",
     bar_height=20,
     showticklabels=True,
@@ -31,7 +31,7 @@ def vertical_bar_chart(
         y (array-like): Values for y-axis. Can be a pandas Series or list.
         color_fn (callable, optional): Function to determine bar colors based on y values. Defaults to None.
         text_fn (callable, optional): Function to determine bar text labels based on y values. Defaults to None.
-        margin (dict, optional): Chart margins in format {l, r, t, b}. Defaults to {l:20, r:20, t:20, b:20}.
+        margin (dict, optional): Chart margins in format {l, r, t, b, pad}. Defaults to {l:20, r:20, t:20, b:20, pad:5}. pad is the padding between the plotting area and the axis lines.
         marker_color (str/list, optional): Color(s) for bars. Used if color_fn is None. Defaults to None.
         bar_height (int, optional): Height of each bar in pixels. Defaults to 20.
         showticklabels (bool, optional): Whether to show tick labels on y-axis. Defaults to True.
@@ -87,7 +87,7 @@ def vertical_bar_chart(
         )
     )
     fig.update_layout(
-        margin=margin or dict(l=20, r=20, t=20, b=20),
+        margin=margin,
         xaxis=dict(automargin=True),
         yaxis=dict(showticklabels=showticklabels, range=[0, y_range_max]),
         plot_bgcolor=plot_bgcolor,
@@ -103,7 +103,7 @@ def horizontal_bar_chart(
     y,
     color_fn=None,
     text_fn=None,
-    margin=None,
+    margin=dict(l=20, r=20, t=0, b=0, pad=5),
     marker_color="#64AFE0",
     bar_height = 20,
     showticklabels=True,
@@ -123,7 +123,7 @@ def horizontal_bar_chart(
         y (array-like): Labels for the bars (y-axis).
         color_fn (callable, optional): Function to determine bar colors based on x values. Defaults to None.
         text_fn (callable, optional): Function to determine text display for each bar based on x values. Defaults to None.
-        margin (dict, optional): Chart margins in format {l, r, t, b}. Defaults to {l:20, r:20, t:20, b:20}.
+        margin (dict, optional): Chart margins in format {l, r, t, b, pad}. Defaults to {l:20, r:20, t:20, b:20, pad:5}. pad is the padding between the plotting area and the axis lines.
         marker_color (str, optional): Color(s) for bars. Used if color_fn is None.
         bar_height (int, optional): Height of each bar in pixels. Defaults to 20.
         showticklabels (bool, optional): Whether to show x-axis tick labels. Defaults to True.
@@ -177,7 +177,7 @@ def horizontal_bar_chart(
         )
     )
     fig.update_layout(
-        margin=margin or dict(l=20, r=20, t=0, b=0),
+        margin=margin,
         yaxis=dict(autorange="reversed"),
         xaxis=dict(showticklabels=showticklabels, range=[0, x_range_max]),
         plot_bgcolor=plot_bgcolor,
