@@ -40,7 +40,6 @@ def build_filter_condition(filters: dict) -> str:
         else:
             clauses.append(f"{col} = ?")
             params.append(value)
-    print(params)
     return " AND ".join(clauses), params
 
 
