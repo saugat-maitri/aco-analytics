@@ -22,7 +22,6 @@ from .data import (
     get_cohort_data,
     get_condition_ccsr_data,
     get_demographic_data,
-    get_encounter_type_pmpm_data,
     get_pmpm_performance_vs_expected_data,
     get_trends_data,
 )
@@ -235,39 +234,6 @@ def update_encounter_group_percentage_chart(start_date, end_date):
     except Exception as e:
         print(f"Error in update_encounter_group_percentage_chart: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
-
-
-@callback(
-    Output("encounter-type-chart", "figure"),
-    Input("date-picker-input", "start_date"),
-    Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "selectedData"),
-)
-def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
-    try:
-        # Convert date strings to YYYYMM format for filtering
-        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
-        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-
-        filters = extract_sql_filters(group_click)
-
-        data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
-
-        return horizontal_bar_chart(
-            data=data,
-            x="PMPM",
-            y="ENCOUNTER_TYPE",
-            text_fn=[f"${v:,.0f}" for v in data["PMPM"]],
-            show_tick_labels=False,
-            custom_data=data["ENCOUNTER_TYPE"],
-            hover_template=(
-                "Encounter Type: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
-            ),
-        )
-
-    except Exception as e:
-        print(f"Error in update_encounter_type_pmpm_bar: {e}")
-        return f"Error loading data: {str(e)}"
 
 
 @callback(
