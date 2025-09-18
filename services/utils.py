@@ -24,21 +24,24 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
         )
     return filters
 
+
 def build_filter_condition(filters: dict) -> str:
     """Build a SQL filter condition string from a dict of filters.
-    
+
     Example:
-        {"col1": "A", "col2": 5} -> "col1 = 'A' AND col2 = 5"
+        {"col1": "A", "col2": 5} -> "col1 = ? AND col2 = ?", ["A", 5]
     """
     clauses = []
+    params = []
     for col, value in filters.items():
         if value is None:
-            continue
-        if isinstance(value, str):
-            clauses.append(f"{col} = '{value}'")
+            clauses.append(f"{col} IS NULL")
+            params.append(None)
         else:
-            clauses.append(f"{col} = {value}")
-    return " AND ".join(clauses)
+            clauses.append(f"{col} = ?")
+            params.append(value)
+    print(params)
+    return " AND ".join(clauses), params
 
 
 # Truncate long text

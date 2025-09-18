@@ -72,11 +72,11 @@ class SQLiteManager:
     def __init__(self, db_path: str = sqlite_path):
         self.db_path = db_path
 
-    def query(self, sql_query: str) -> pd.DataFrame:
+    def query(self, sql_query: str, params: tuple | list = None) -> pd.DataFrame:
         """Run a SQL query against the SQLite database."""
         conn = sqlite3.connect(self.db_path)
         try:
-            return pd.read_sql_query(sql_query, conn)
+            return pd.read_sql_query(sql_query, conn, params=params)
         finally:
             conn.close()
 

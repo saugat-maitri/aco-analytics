@@ -13,7 +13,7 @@ def calc_kpis(
     start_yyyymm = dt_to_yyyymm(start_date)
     end_yyyymm = dt_to_yyyymm(end_date)
 
-    condition = build_filter_condition(filters)
+    condition, params = build_filter_condition(filters)
     filter_sql = f" AND {condition}" if condition else ""
 
     query = f"""
@@ -40,7 +40,7 @@ def calc_kpis(
             member_months.mm
         FROM claims_agg, member_months
     """
-    result = sqlite_manager.query(query)
+    result = sqlite_manager.query(query, params)
     row = result.iloc[0]
     paid = row.get("paid") or 0
     mm = row.get("mm") or 0
@@ -87,7 +87,7 @@ def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFra
 
 
 def get_trends_data(filters) -> pd.DataFrame:
-    condition = build_filter_condition(filters)
+    condition, params = build_filter_condition(filters)
     filter_sql = f"WHERE {condition}" if condition else ""
 
     query = f"""
@@ -134,7 +134,7 @@ def get_trends_data(filters) -> pd.DataFrame:
             ON m.YEAR_MONTH = e.YEAR_MONTH
         ORDER BY m.YEAR_MONTH;
     """
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
 
 
 def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
@@ -205,7 +205,7 @@ def get_pmpm_performance_vs_expected_data(
 
 
 def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
-    condition = build_filter_condition(filters)
+    condition, params = build_filter_condition(filters)
     filter_sql = f" AND {condition}" if condition else ""
 
     query = f"""
@@ -282,4 +282,4 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
             100.0 AS percent_of_total
         FROM group_summary
     """
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
