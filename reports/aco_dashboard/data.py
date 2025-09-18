@@ -144,8 +144,14 @@ def get_trends_data(filters) -> pd.DataFrame:
     return sqlite_manager.query(query)
 
 
-def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
+def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int, filters:  Optional[dict] = None) -> pd.DataFrame:
     """Load condition CCSR data using efficient CTE-based query."""
+    filter_sql = ""
+    if filters:
+        for col, value in filters.items():
+            if value is not None:
+                filter_sql += f" AND {col} = '{value}'"
+
     query = f"""
         WITH
         category_claims AS (
@@ -153,7 +159,10 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
                 fc.CCSR_CATEGORY_DESCRIPTION, 
                 SUM(fc.PAID_AMOUNT) AS TOTAL_PAID 
             FROM FACT_CLAIMS AS fc 
+            LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                ON fc.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE fc.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+            {filter_sql}
             GROUP BY fc.CCSR_CATEGORY_DESCRIPTION
         ),
         member_months AS (
@@ -178,8 +187,15 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
 
 
 def get_pmpm_performance_vs_expected_data(
-    start_yyyymm: int, end_yyyymm: int
+    start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
 ) -> pd.DataFrame:
+    filter_sql = ""
+    if filters:
+        for col, value in filters.items():
+            if value is not None:
+                filter_sql += f" AND {col} = '{value}'"
+            else:
+                filter_sql += f" AND {col} IS NULL"
     query = f"""
         WITH claims_by_encounter_group AS (
             SELECT
@@ -189,6 +205,7 @@ def get_pmpm_performance_vs_expected_data(
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+            {filter_sql}
             GROUP BY grp.ENCOUNTER_GROUP
         ),
         member_months AS (

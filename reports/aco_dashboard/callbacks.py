@@ -51,7 +51,7 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_
         start_date, end_date, comparison_period
     )
 
-    filters = extract_sql_filters(group_click, ccsr_click)
+    filters = extract_sql_filters(group_click=group_click, ccsr_click=ccsr_click)
     pmpm_main = calc_kpis(start_date, end_date, filters)
     pmpm_comp = calc_kpis(start_comp, end_comp, filters)
 
@@ -70,7 +70,7 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_
     Input("condition-ccsr-chart", "selectedData"),
 )
 def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr_click):
-    filters = extract_sql_filters(group_click, ccsr_click)
+    filters = extract_sql_filters(group_click=group_click, ccsr_click=ccsr_click)
 
     df = get_trends_data(filters)
 
@@ -100,17 +100,18 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr
     Output("condition-ccsr-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("encounter-group-chart", "selectedData"),
 )
-def update_condition_ccsr_cost_driver_graph(start_date, end_date):
+def update_condition_ccsr_cost_driver_graph(start_date, end_date, group_click):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-
-        ccsr_data = get_condition_ccsr_data(start_yyyymm, end_yyyymm)
+        filters = extract_sql_filters(group_click=group_click)
+        ccsr_data = get_condition_ccsr_data(start_yyyymm, end_yyyymm, filters)
 
         ccsr_data["TRUNCATED_CATEGORY"] = ccsr_data["CCSR_CATEGORY_DESCRIPTION"].apply(
-            lambda x: truncate_text(x, 30)
+            lambda x: truncate_text(x, 35)
         )
         return horizontal_bar_chart(
             data=ccsr_data,
@@ -180,14 +181,15 @@ def update_demographic_data(start_date, end_date, comparison_period):
     Output("encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_performance_vs_expected(start_date, end_date):
+def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-
-        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
+        filters = extract_sql_filters(ccsr_click=selected_ccsr)
+        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm, filters)
 
         return horizontal_bar_chart(
             data=data,
@@ -229,7 +231,7 @@ def update_encounter_group_percentage_chart(start_date, end_date):
             data=data,
             x="PMPM",
             group_col="ENCOUNTER_GROUP",
-            height=120,
+            height=90,
         )
 
     except Exception as e:
@@ -249,7 +251,7 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
-        filters = extract_sql_filters(group_click)
+        filters = extract_sql_filters(group_click=group_click)
 
         data = get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters)
 
@@ -274,16 +276,15 @@ def update_encounter_type_pmpm_bar(start_date, end_date, group_click):
     Output("paid-by-cohort-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("comparison-period-dropdown", "value"),
     Input("encounter-group-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_cohort_data(start_date, end_date, comparison_period, group_click, ccsr):
+def update_cohort_data(start_date, end_date, group_click, ccsr):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(group_click, None, ccsr)
+        filters = extract_sql_filters(group_click=group_click, ccsr_click=ccsr)
 
         data = get_cohort_data(start_yyyymm, end_yyyymm, filters)
 
