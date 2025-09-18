@@ -25,7 +25,7 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
     return filters
 
 
-def build_filter_condition(filters: dict) -> str:
+def build_filter_condition(filters: dict) -> tuple[str, list]:
     """Build a SQL filter condition string from a dict of filters.
 
     Example:

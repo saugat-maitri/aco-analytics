@@ -13,8 +13,10 @@ def calc_kpis(
     start_yyyymm = dt_to_yyyymm(start_date)
     end_yyyymm = dt_to_yyyymm(end_date)
 
-    condition, params = build_filter_condition(filters)
-    filter_sql = f" AND {condition}" if condition else ""
+    filter_sql = ""
+    if filters:
+        condition, params = build_filter_condition(filters)
+        filter_sql = f" AND {condition}" if condition else ""
 
     query = f"""
         WITH claims_agg AS (
@@ -86,9 +88,11 @@ def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFra
     return sqlite_manager.query(query)
 
 
-def get_trends_data(filters) -> pd.DataFrame:
-    condition, params = build_filter_condition(filters)
-    filter_sql = f"WHERE {condition}" if condition else ""
+def get_trends_data(filters: Optional[dict] = None) -> pd.DataFrame:
+    filter_sql = ""
+    if filters:
+        condition, params = build_filter_condition(filters)
+        filter_sql = f"WHERE {condition}" if condition else ""
 
     query = f"""
         WITH member_counts_by_month AS (
@@ -137,13 +141,14 @@ def get_trends_data(filters) -> pd.DataFrame:
     return sqlite_manager.query(query, params)
 
 
-def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int, filters:  Optional[dict] = None) -> pd.DataFrame:
+def get_condition_ccsr_data(
+    start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
+) -> pd.DataFrame:
     """Load condition CCSR data using efficient CTE-based query."""
     filter_sql = ""
     if filters:
-        for col, value in filters.items():
-            if value is not None:
-                filter_sql += f" AND {col} = '{value}'"
+        condition, params = build_filter_condition(filters)
+        filter_sql = f" AND {condition}" if condition else ""
 
     query = f"""
         WITH
@@ -176,7 +181,7 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int, filters:  Option
         ORDER BY PMPM DESC
     """
 
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
 
 
 def get_pmpm_performance_vs_expected_data(
@@ -184,11 +189,9 @@ def get_pmpm_performance_vs_expected_data(
 ) -> pd.DataFrame:
     filter_sql = ""
     if filters:
-        for col, value in filters.items():
-            if value is not None:
-                filter_sql += f" AND {col} = '{value}'"
-            else:
-                filter_sql += f" AND {col} IS NULL"
+        condition, params = build_filter_condition(filters)
+        filter_sql = f" AND {condition}" if condition else ""
+
     query = f"""
         WITH claims_by_encounter_group AS (
             SELECT
@@ -218,7 +221,7 @@ def get_pmpm_performance_vs_expected_data(
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
     """
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
 
 
 def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
