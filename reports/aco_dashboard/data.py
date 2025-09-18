@@ -4,7 +4,7 @@ from typing import Optional
 import pandas as pd
 
 from services.database import sqlite_manager
-from services.utils import dt_to_yyyymm
+from services.utils import build_filter_condition, dt_to_yyyymm
 
 
 def calc_kpis(
@@ -13,11 +13,8 @@ def calc_kpis(
     start_yyyymm = dt_to_yyyymm(start_date)
     end_yyyymm = dt_to_yyyymm(end_date)
 
-    filter_sql = ""
-    if filters:
-        for col, value in filters.items():
-            if value is not None:
-                filter_sql += f" AND {col} = '{value}'"
+    condition, params = build_filter_condition(filters)
+    filter_sql = f" AND {condition}" if condition else ""
 
     query = f"""
         WITH claims_agg AS (
@@ -43,7 +40,7 @@ def calc_kpis(
             member_months.mm
         FROM claims_agg, member_months
     """
-    result = sqlite_manager.query(query)
+    result = sqlite_manager.query(query, params)
     row = result.iloc[0]
     paid = row.get("paid") or 0
     mm = row.get("mm") or 0
@@ -76,11 +73,13 @@ def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFra
             FROM member_month_details
         )
         SELECT 
-            mmc.TOTAL_MEMBER_MONTHS,
-            AVG(mmd.AGE) AS AVG_AGE,
-            100.0 * SUM(CASE WHEN LOWER(mmd.SEX) = 'female' THEN 1 ELSE 0 END) 
-                / mmc.TOTAL_MEMBER_MONTHS AS PERCENT_FEMALE,
-            AVG(mmd.NORMALIZED_RISK_SCORE) AS AVG_RISK_SCORE
+            COALESCE(mmc.TOTAL_MEMBER_MONTHS, 0) AS TOTAL_MEMBER_MONTHS,
+            CASE WHEN mmc.TOTAL_MEMBER_MONTHS > 0 
+                THEN 100.0 * SUM(CASE WHEN LOWER(mmd.SEX) = 'female' THEN 1 ELSE 0 END) 
+                    / mmc.TOTAL_MEMBER_MONTHS
+                ELSE 0 
+            END AS PERCENT_FEMALE,
+            COALESCE(AVG(mmd.NORMALIZED_RISK_SCORE), 0) AS AVG_RISK_SCORE
         FROM member_month_details mmd
         CROSS JOIN member_month_counts mmc;
     """
@@ -88,14 +87,8 @@ def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFra
 
 
 def get_trends_data(filters) -> pd.DataFrame:
-    filter_sql = ""
-    if filters:
-        filter_clauses = []
-        for col, value in filters.items():
-            if value is not None:
-                filter_clauses.append(f"{col} = '{value}'")
-        if filter_clauses:
-            filter_sql = " WHERE " + " AND ".join(filter_clauses)
+    condition, params = build_filter_condition(filters)
+    filter_sql = f"WHERE {condition}" if condition else ""
 
     query = f"""
         WITH member_counts_by_month AS (
@@ -141,7 +134,7 @@ def get_trends_data(filters) -> pd.DataFrame:
             ON m.YEAR_MONTH = e.YEAR_MONTH
         ORDER BY m.YEAR_MONTH;
     """
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
 
 
 def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int, filters:  Optional[dict] = None) -> pd.DataFrame:
@@ -228,55 +221,10 @@ def get_pmpm_performance_vs_expected_data(
     return sqlite_manager.query(query)
 
 
-def get_encounter_type_pmpm_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
-    filter_sql = ""
-    if filters:
-        for col, value in filters.items():
-            if value is not None:
-                filter_sql += f" AND {col} = '{value}'"
-
-    query = f"""
-        WITH claims_by_encounter_type AS (
-            SELECT
-                typ.ENCOUNTER_TYPE,
-                SUM(PAID_AMOUNT) as TOTAL_PAID
-            FROM FACT_CLAIMS clm
-            LEFT JOIN DIM_ENCOUNTER_TYPE typ
-                ON clm.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
-            LEFT JOIN DIM_ENCOUNTER_GROUP grp
-                ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
-            WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
-            GROUP BY typ.ENCOUNTER_TYPE
-        ),
-        member_months AS (
-            SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS MEMBER_MONTHS_COUNT
-            FROM FACT_MEMBER_MONTHS
-            WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
-        )
-
-        SELECT
-            clm.ENCOUNTER_TYPE,
-            CASE 
-                WHEN mm.MEMBER_MONTHS_COUNT > 0 
-                THEN clm.TOTAL_PAID / mm.MEMBER_MONTHS_COUNT 
-                ELSE 0 
-            END AS PMPM
-        FROM claims_by_encounter_type clm
-        CROSS JOIN member_months AS MM
-        ORDER BY PMPM DESC
-    """
-    return sqlite_manager.query(query)
-
-
 def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
-    filter_sql = ""
-    if filters:
-        for col, value in filters.items():
-            if value is not None:
-                filter_sql += f" AND {col} = '{value}'"
-            else:
-                filter_sql += f" AND {col} IS NULL"
+    condition, params = build_filter_condition(filters)
+    filter_sql = f" AND {condition}" if condition else ""
+
     query = f"""
         WITH member_totals AS (
             SELECT 
@@ -351,4 +299,4 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
             100.0 AS percent_of_total
         FROM group_summary
     """
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)

@@ -25,6 +25,24 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
     return filters
 
 
+def build_filter_condition(filters: dict) -> str:
+    """Build a SQL filter condition string from a dict of filters.
+
+    Example:
+        {"col1": "A", "col2": 5} -> "col1 = ? AND col2 = ?", ["A", 5]
+    """
+    clauses = []
+    params = []
+    for col, value in filters.items():
+        if value is None:
+            clauses.append(f"{col} IS NULL")
+            params.append(None)
+        else:
+            clauses.append(f"{col} = ?")
+            params.append(value)
+    return " AND ".join(clauses), params
+
+
 # Truncate long text
 def truncate_text(text, max_length=30):
     return text[:max_length] + "..." if len(text) > max_length else text
