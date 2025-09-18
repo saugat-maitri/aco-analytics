@@ -77,12 +77,13 @@ layout = (
                                                             html.H5(
                                                                 "PMPM by Encounter Group (vs Expected)",
                                                                 className="mb-2 text-teal-blue",
+                                                                style={"text-wrap": "nowrap"},
                                                             ),
                                                             dcc.Graph(
                                                                 id="encounter-group-chart",
+                                                                style={"height": "270px"},
                                                             ),
                                                         ],
-                                                        className="p-2",
                                                     )
                                                 ],
                                             ),
@@ -99,9 +100,9 @@ layout = (
                                                             ),
                                                             dcc.Graph(
                                                                 id="paid-by-cohort-chart",
+                                                                style={"height": "270px"},
                                                             ),
                                                         ],
-                                                        className="p-2",
                                                     )
                                                 ],
                                             ),
