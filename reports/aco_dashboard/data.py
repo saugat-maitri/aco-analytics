@@ -4,7 +4,7 @@ from typing import Optional
 import pandas as pd
 
 from services.database import sqlite_manager
-from services.utils import build_filter_condition, dt_to_yyyymm
+from services.utils import build_filter_clause, dt_to_yyyymm
 
 
 def calc_kpis(
@@ -13,9 +13,9 @@ def calc_kpis(
     start_yyyymm = dt_to_yyyymm(start_date)
     end_yyyymm = dt_to_yyyymm(end_date)
 
-    condition, params = build_filter_condition(filters)
-    filter_sql = f" AND {condition}" if condition else ""
-
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
     query = f"""
         WITH claims_agg AS (
             SELECT
@@ -27,7 +27,7 @@ def calc_kpis(
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
+            {filter_clause}
         ),
         member_months AS (
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS mm
@@ -86,9 +86,10 @@ def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFra
     return sqlite_manager.query(query)
 
 
-def get_trends_data(filters) -> pd.DataFrame:
-    condition, params = build_filter_condition(filters)
-    filter_sql = f"WHERE {condition}" if condition else ""
+def get_trends_data(filters: Optional[dict] = None) -> pd.DataFrame:
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" WHERE {filter_clause}"
 
     query = f"""
         WITH member_counts_by_month AS (
@@ -108,7 +109,7 @@ def get_trends_data(filters) -> pd.DataFrame:
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
-            {filter_sql}
+            {filter_clause}
             GROUP BY clm.YEAR_MONTH
         )
         SELECT 
@@ -137,8 +138,14 @@ def get_trends_data(filters) -> pd.DataFrame:
     return sqlite_manager.query(query, params)
 
 
-def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
+def get_condition_ccsr_data(
+    start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
+) -> pd.DataFrame:
     """Load condition CCSR data using efficient CTE-based query."""
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
+
     query = f"""
         WITH
         category_claims AS (
@@ -146,7 +153,10 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
                 fc.CCSR_CATEGORY_DESCRIPTION, 
                 SUM(fc.PAID_AMOUNT) AS TOTAL_PAID 
             FROM FACT_CLAIMS AS fc 
+            LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                ON fc.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE fc.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+            {filter_clause}
             GROUP BY fc.CCSR_CATEGORY_DESCRIPTION
         ),
         member_months AS (
@@ -167,12 +177,15 @@ def get_condition_ccsr_data(start_yyyymm: int, end_yyyymm: int) -> pd.DataFrame:
         ORDER BY PMPM DESC
     """
 
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
 
 
 def get_pmpm_performance_vs_expected_data(
-    start_yyyymm: int, end_yyyymm: int
+    start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
 ) -> pd.DataFrame:
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
     query = f"""
         WITH claims_by_encounter_group AS (
             SELECT
@@ -182,6 +195,7 @@ def get_pmpm_performance_vs_expected_data(
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+            {filter_clause}
             GROUP BY grp.ENCOUNTER_GROUP
         ),
         member_months AS (
@@ -201,12 +215,13 @@ def get_pmpm_performance_vs_expected_data(
         CROSS JOIN member_months AS MM
         ORDER BY PMPM DESC
     """
-    return sqlite_manager.query(query)
+    return sqlite_manager.query(query, params)
 
 
 def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
-    condition, params = build_filter_condition(filters)
-    filter_sql = f" AND {condition}" if condition else ""
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
 
     query = f"""
         WITH member_totals AS (
@@ -219,7 +234,7 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON fc.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
             WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
+            {filter_clause}
             GROUP BY person_id
         ),
 

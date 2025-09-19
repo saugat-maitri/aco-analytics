@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -7,11 +7,28 @@ from pandas import DateOffset
 
 
 def dt_to_yyyymm(dt):
+    """Convert a datetime object to an integer in YYYYMM format.
+
+    Args:
+        dt (datetime): The datetime object to convert.
+
+    Returns:
+        int: The date in YYYYMM integer format.
+    """
     return dt.year * 100 + dt.month
 
 
 def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=None):
-    """Extract SQL filters from the selected data points."""
+    """Extract SQL filter values from selected data points in interactive charts.
+
+    Args:
+        group_click (dict, optional): Click data for encounter group selection.
+        encounter_type_click (dict, optional): Click data for encounter type selection.
+        ccsr_click (dict, optional): Click data for CCSR category selection.
+
+    Returns:
+        dict: Dictionary of SQL filter column names and their selected values.
+    """
     filters = {}
     if group_click and group_click.get("points"):
         filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
@@ -25,42 +42,54 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
     return filters
 
 
-def build_filter_condition(filters: dict) -> str:
-    """Build a SQL filter condition string from a dict of filters.
+def build_filter_clause(filters: Optional[dict]) -> tuple[str, list]:
+    """Build a SQL filter condition string and parameter list from a dictionary of filters.
 
-    Example:
-        {"col1": "A", "col2": 5} -> "col1 = ? AND col2 = ?", ["A", 5]
+    Args:
+        filters (dict, optional): Dictionary of column-value pairs for filtering.
+
+    Returns:
+        tuple[str, list]: Tuple containing the SQL condition string and a list of parameter values.
     """
     clauses = []
     params = []
+    if not filters:
+        return "", []
+
     for col, value in filters.items():
         if value is None:
             clauses.append(f"{col} IS NULL")
-            params.append(None)
         else:
             clauses.append(f"{col} = ?")
             params.append(value)
-    return " AND ".join(clauses), params
+
+    condition = " AND ".join(clauses)
+    return (condition if condition else ""), params
 
 
-# Truncate long text
 def truncate_text(text, max_length=30):
+    """Truncate a string to a maximum length, appending '...' if truncated.
+
+    Args:
+        text (str): The text to truncate.
+        max_length (int, optional): Maximum allowed length. Defaults to 30.
+
+    Returns:
+        str: Truncated text with ellipsis if needed.
+    """
     return text[:max_length] + "..." if len(text) > max_length else text
 
 
 def format_large_number(value):
-    """Format large numbers with appropriate suffixes and dollar sign prefix.
-
-    This function takes a numeric value and formats it with a dollar sign prefix
-    and appropriate suffix (B for billions, M for millions, K for thousands).
-    Numbers less than 1000 are formatted with 2 decimal places.
+    """Format a numeric value with a dollar sign and appropriate suffix (B, M, K).
 
     Args:
-        value (float): The number to be formatted
+        value (float): The number to format.
 
     Returns:
-        str: A formatted string with dollar sign prefix and appropriate suffix
-            Examples:
+        str: Formatted string with dollar sign and suffix.
+
+    Examples:
             - 1234567890 -> "$1B"
             - 1234567 -> "$1M"
             - 1234 -> "$1K"
@@ -79,6 +108,16 @@ def format_large_number(value):
 def get_comparison_period(
     start: datetime, end: datetime, comparison_period: str
 ) -> Tuple[datetime, datetime]:
+    """Calculate the start and end dates for a comparison period based on the selected period and comparison type.
+
+    Args:
+        start (datetime): Start date of the selected period.
+        end (datetime): End date of the selected period.
+        comparison_period (str): Type of comparison period (e.g., 'Same Period Last Year', 'Previous Year').
+
+    Returns:
+        tuple[datetime, datetime]: Start and end dates for the comparison period.
+    """
     period_months = (end.year - start.year) * 12 + (end.month - start.month) + 1
 
     if comparison_period == "Same Period Last Year":
@@ -117,6 +156,16 @@ def get_comparison_period(
 
 
 def get_comparison_offset(month, comparison_period, selected_months=None):
+    """Generate a date range for the comparison period based on the selected month and comparison type.
+
+    Args:
+        month (pd.Timestamp): The reference month for comparison.
+        comparison_period (str): Type of comparison period (e.g., 'Previous Month', 'Previous Year').
+        selected_months (list, optional): List of selected months for 'Previous Period' comparison.
+
+    Returns:
+        pd.DatetimeIndex: Range of months for the comparison period.
+    """
     if comparison_period == "Previous Month":
         comp_start = comp_end = month - DateOffset(months=1)
     elif comparison_period == "Previous Year":
