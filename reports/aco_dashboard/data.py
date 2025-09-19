@@ -145,7 +145,7 @@ def get_condition_ccsr_data(
     filter_clause, params = build_filter_clause(filters)
     if filter_clause:
         filter_clause = f" AND {filter_clause}"
-    
+
     query = f"""
         WITH
         category_claims AS (

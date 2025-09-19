@@ -42,8 +42,7 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
     return filters
 
 
-def build_filter_clause(
-    filters: Optional[dict]) -> tuple[str, list]:
+def build_filter_clause(filters: Optional[dict]) -> tuple[str, list]:
     """Build a SQL filter condition string and parameter list from a dictionary of filters.
 
     Args:
