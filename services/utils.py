@@ -43,13 +43,11 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
 
 
 def build_filter_clause(
-    filters: Optional[dict], prefix: str = "WHERE"
-) -> tuple[str, list]:
+    filters: Optional[dict]) -> tuple[str, list]:
     """Build a SQL filter condition string and parameter list from a dictionary of filters.
 
     Args:
         filters (dict, optional): Dictionary of column-value pairs for filtering.
-        prefix (str, optional): SQL clause prefix (e.g., 'WHERE', 'AND'). Defaults to 'WHERE'.
 
     Returns:
         tuple[str, list]: Tuple containing the SQL condition string and a list of parameter values.
@@ -67,7 +65,7 @@ def build_filter_clause(
             params.append(value)
 
     condition = " AND ".join(clauses)
-    return (f"{prefix} {condition}" if condition else ""), params
+    return (condition if condition else ""), params
 
 
 def truncate_text(text, max_length=30):

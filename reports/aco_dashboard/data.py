@@ -13,7 +13,9 @@ def calc_kpis(
     start_yyyymm = dt_to_yyyymm(start_date)
     end_yyyymm = dt_to_yyyymm(end_date)
 
-    filter_sql, params = build_filter_clause(filters, prefix="AND")
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
     query = f"""
         WITH claims_agg AS (
             SELECT
@@ -25,7 +27,7 @@ def calc_kpis(
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
+            {filter_clause}
         ),
         member_months AS (
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS mm
@@ -85,7 +87,9 @@ def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFra
 
 
 def get_trends_data(filters: Optional[dict] = None) -> pd.DataFrame:
-    filter_sql, params = build_filter_clause(filters, prefix="WHERE")
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" WHERE {filter_clause}"
 
     query = f"""
         WITH member_counts_by_month AS (
@@ -105,7 +109,7 @@ def get_trends_data(filters: Optional[dict] = None) -> pd.DataFrame:
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON clm.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
-            {filter_sql}
+            {filter_clause}
             GROUP BY clm.YEAR_MONTH
         )
         SELECT 
@@ -138,8 +142,10 @@ def get_condition_ccsr_data(
     start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
 ) -> pd.DataFrame:
     """Load condition CCSR data using efficient CTE-based query."""
-    filter_sql, params = build_filter_clause(filters, prefix="AND")
-
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
+    
     query = f"""
         WITH
         category_claims AS (
@@ -150,7 +156,7 @@ def get_condition_ccsr_data(
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON fc.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE fc.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
+            {filter_clause}
             GROUP BY fc.CCSR_CATEGORY_DESCRIPTION
         ),
         member_months AS (
@@ -177,7 +183,9 @@ def get_condition_ccsr_data(
 def get_pmpm_performance_vs_expected_data(
     start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
 ) -> pd.DataFrame:
-    filter_sql, params = build_filter_clause(filters, prefix="AND")
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
     query = f"""
         WITH claims_by_encounter_group AS (
             SELECT
@@ -187,7 +195,7 @@ def get_pmpm_performance_vs_expected_data(
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
+            {filter_clause}
             GROUP BY grp.ENCOUNTER_GROUP
         ),
         member_months AS (
@@ -211,7 +219,9 @@ def get_pmpm_performance_vs_expected_data(
 
 
 def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
-    filter_sql, params = build_filter_clause(filters, prefix="AND")
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
 
     query = f"""
         WITH member_totals AS (
@@ -224,7 +234,7 @@ def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:
             LEFT JOIN DIM_ENCOUNTER_TYPE type
                 ON fc.ENCOUNTER_TYPE_SK = type.ENCOUNTER_TYPE_SK
             WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
-            {filter_sql}
+            {filter_clause}
             GROUP BY person_id
         ),
 
