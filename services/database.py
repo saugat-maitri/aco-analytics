@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 import snowflake.connector
@@ -72,7 +72,9 @@ class SQLiteManager:
     def __init__(self, db_path: str = sqlite_path):
         self.db_path = db_path
 
-    def query(self, sql_query: str, params: tuple | list = None) -> pd.DataFrame:
+    def query(
+        self, sql_query: str, params: Optional[Union[tuple, list]] = None
+    ) -> pd.DataFrame:
         """Run a SQL query against the SQLite database."""
         conn = sqlite3.connect(self.db_path)
         try:

@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 from dash import Input, Output, callback
 
-from components.bar_chart import horizontal_bar_chart, stacked_percentage_bar
+from components.bar_chart import horizontal_bar_chart, single_stacked_bar
 from components.demographics_card import demographics_card
 from components.kpi_card import kpi_card
 from components.no_data_figure import no_data_figure
@@ -217,8 +217,9 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
     Output("encounter-group-percentage-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("encounter-group-chart", "selectedData"),
 )
-def update_encounter_group_percentage_chart(start_date, end_date):
+def update_encounter_group_percentage_chart(start_date, end_date, group_click):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
@@ -226,11 +227,26 @@ def update_encounter_group_percentage_chart(start_date, end_date):
 
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
 
-        return stacked_percentage_bar(
+        encounter_group = (
+            group_click["points"][0]["y"]
+            if group_click and group_click.get("points")
+            else None
+        )
+
+        return single_stacked_bar(
             data=data,
-            x="PMPM",
-            group_col="ENCOUNTER_GROUP",
+            x="PCT",
+            color="ENCOUNTER_GROUP",
+            text="PCT",
+            custom_data=["ENCOUNTER_GROUP", "PMPM"],
+            hover_template=(
+                "   Encounter Group: %{customdata[0]}   <br>"
+                "   PMPM: $%{customdata[1]:,.2f} (%{x:.2f}%)   <br><br>"
+                "<extra></extra>"
+            ),
+            color_scheme=["#64b0e1", "#ffcb09", "#1dc274", "#0096b5"],
             height=90,
+            active_label=encounter_group,
         )
 
     except Exception as e:

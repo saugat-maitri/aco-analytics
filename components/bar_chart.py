@@ -1,3 +1,5 @@
+from typing import List, Optional, Union
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
@@ -185,51 +187,75 @@ def horizontal_bar_chart(
     return fig
 
 
-def stacked_percentage_bar(
+def single_stacked_bar(
     data: pd.DataFrame,
     x: str,
-    group_col: str,
+    color: str,
+    text: Optional[str] = None,
+    custom_data: Optional[Union[str, List[str]]] = None,
+    hover_template: Optional[str] = None,
+    color_scheme: Optional[List[str]] = px.colors.qualitative.Set2,
     height: int = 120,
+    active_label: Optional[str] = None,
 ):
     """Create and return a stacked percentage bar chart using plotly.
 
     Args:
         data (pandas.DataFrame): Input DataFrame containing the data to plot.
         x (str): Column name containing numeric values to be represented as percentages.
-        group_col (str): Column name containing group labels for each bar segment.
+        color (str): Column name containing group labels for each bar segment.
+        text (str, optional): Column name for text labels on each segment. Defaults to None.
+        custom_data (str or list, optional): Column name(s) for custom data in hover info. Defaults to None.
+        hover_template (str, optional): Template for hover information display. Defaults to None.
+        color_scheme (list, optional): List of colors for the segments. Defaults to None (uses Plotly's Set2).
         height (int, optional): Height of the chart in pixels. Defaults to 120.
+        active_label (str, optional): Label of the active segment to highlight. Defaults to None.
 
     Returns:
         plotly.graph_objects.Figure: A plotly stacked percentage bar chart figure.
     """
-    color_scheme = px.colors.qualitative.Set2
+    if text is None:
+        text = x
 
-    total = data[x].sum()
-    data["PCT"] = (data[x] / total * 100).round(1) if total > 0 else 0
+    data["BAR_GROUP"] = "Total"
 
-    fig = go.Figure()
+    fig = px.bar(
+        data,
+        x="PCT",
+        y="BAR_GROUP",
+        color=color,
+        orientation="h",
+        text=text,
+        custom_data=custom_data if custom_data else color,
+        color_discrete_sequence=color_scheme,
+    )
 
-    for i, row in data.iterrows():
-        fig.add_bar(
-            x=[row["PCT"]],
-            y=[""],
-            orientation="h",
-            name=row[group_col],
-            text=[f"{row['PCT']:.0f}%"],
-            textposition="inside",
-            insidetextanchor="middle",
-            customdata=[[x, row[group_col]]],
-            hovertemplate=(
-                "<b>%{customdata[1]}</b><br>%{customdata[0]}: %{x:,.2f}%<extra></extra>"
-            ),
-            marker_color=color_scheme[i % len(color_scheme)],
-        )
+    if active_label is not None:
+        for trace in fig.data:
+            if trace.name == active_label:
+                trace.marker.opacity = 1.0
+                trace.textfont.color = "rgba(0,0,0,1)"
+            else:
+                trace.marker.opacity = 0.2
+                trace.textfont.color = "rgba(0,0,0,0.2)"
+
+    fig.update_traces(
+        texttemplate="%{text:.0f}%",
+        textposition="inside",
+        insidetextanchor="middle",
+        hovertemplate=hover_template
+        if hover_template
+        else "%{customdata[0]}: %{x}<extra></extra>",
+    )
 
     fig.update_layout(
         barmode="stack",
-        margin=dict(l=20, r=20, t=40, b=20),
+        clickmode="event+select",
+        margin=dict(l=20, r=20, t=40, b=20, pad=1),
         xaxis=dict(automargin=True, showgrid=False, zeroline=False, ticksuffix="%"),
         yaxis=dict(showticklabels=False),
+        xaxis_title="",
+        yaxis_title="",
         plot_bgcolor="white",
         height=height,
         legend=dict(
@@ -238,6 +264,7 @@ def stacked_percentage_bar(
             y=1.1,
             xanchor="center",
             x=0.5,
+            title_text="",
         ),
     )
 

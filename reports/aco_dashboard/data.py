@@ -202,18 +202,25 @@ def get_pmpm_performance_vs_expected_data(
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS MEMBER_MONTHS_COUNT
             FROM FACT_MEMBER_MONTHS
             WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
+        ),
+        pmpm_by_group AS (
+            SELECT
+                clm.ENCOUNTER_GROUP,
+                CASE 
+                    WHEN mm.MEMBER_MONTHS_COUNT > 0 
+                    THEN clm.TOTAL_PAID / mm.MEMBER_MONTHS_COUNT 
+                    ELSE 0 
+                END AS PMPM
+            FROM claims_by_encounter_group clm
+            CROSS JOIN member_months AS mm
         )
 
         SELECT
-            clm.ENCOUNTER_GROUP,
-            CASE 
-                WHEN mm.MEMBER_MONTHS_COUNT > 0 
-                THEN clm.TOTAL_PAID / mm.MEMBER_MONTHS_COUNT 
-                ELSE 0 
-            END AS PMPM
-        FROM claims_by_encounter_group clm
-        CROSS JOIN member_months AS MM
-        ORDER BY PMPM DESC
+            ENCOUNTER_GROUP,
+            PMPM,
+            ROUND(PMPM / NULLIF(SUM(PMPM) OVER (), 0) * 100, 1) AS PCT
+        FROM pmpm_by_group
+        ORDER BY PMPM DESC;
     """
     return sqlite_manager.query(query, params)
 
