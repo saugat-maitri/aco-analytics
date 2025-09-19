@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -25,7 +25,7 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
     return filters
 
 
-def build_filter_condition(filters: dict) -> tuple[str, list]:
+def build_filter_clause(filters: Optional[dict], prefix: str = 'WHERE') -> tuple[str, list]:
     """Build a SQL filter condition string from a dict of filters.
 
     Example:
@@ -33,14 +33,18 @@ def build_filter_condition(filters: dict) -> tuple[str, list]:
     """
     clauses = []
     params = []
+    if not filters:
+        return "", []
+    
     for col, value in filters.items():
         if value is None:
             clauses.append(f"{col} IS NULL")
-            params.append(None)
         else:
             clauses.append(f"{col} = ?")
             params.append(value)
-    return " AND ".join(clauses), params
+
+    condition = " AND ".join(clauses)
+    return (f"{prefix} {condition}" if condition else ""), params
 
 
 # Truncate long text
