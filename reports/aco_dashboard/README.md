@@ -1,10 +1,10 @@
-# <img src="assets/tuva_health_logo.png" width="200"/>   ACO Dashboard
+# <img src="../../assets/tuva_health_logo.png" width="200"/>   ACO Dashboard
 
 This module implements the main Accountable Care Organization (ACO) analytics dashboard for the TUVA Health project.
 
 ---
 
-## 📊 features:
+## 📊 Features:
 - Population health metrics tracking and visualization
 - Cost and utilization trend analysis across time periods
 - Risk-adjusted performance measures
