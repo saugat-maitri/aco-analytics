@@ -115,6 +115,7 @@ def horizontal_bar_chart(
     hover_template=None,
     hover_backgroundcolor="white",
     hover_textcolor="black",
+    active_label: Optional[str] = None,
 ):
     """Create and return a horizontal bar chart using plotly.
 
@@ -135,6 +136,7 @@ def horizontal_bar_chart(
         hover_template (str, optional): Template for hover information display. Defaults to None.
         hover_backgroundcolor (str, optional): Background color for hover labels. Defaults to 'white'.
         hover_textcolor (str, optional): Text color for hover labels. Defaults to 'black'.
+        active_label (str, optional): Label of the active bar to highlight. Defaults to None.
 
     Returns:
         plotly.graph_objs.Figure: A horizontal bar chart figure object.
@@ -146,6 +148,10 @@ def horizontal_bar_chart(
     """
     if data.empty:
         return no_data_figure(message="No data available for the selected period.")
+
+    selected_idx = (
+        data.index[data[y] == active_label].tolist() if active_label else None
+    )
 
     x_value = data[x]
     y_value = data[y]
@@ -174,8 +180,10 @@ def horizontal_bar_chart(
                 bgcolor=hover_backgroundcolor, font=dict(color=hover_textcolor)
             ),
             customdata=custom,
+            selectedpoints=selected_idx,
         )
     )
+
     fig.update_layout(
         margin=margin,
         yaxis=dict(autorange="reversed"),
@@ -219,25 +227,21 @@ def single_stacked_bar(
 
     data["BAR_GROUP"] = "Total"
 
-    fig = px.bar(
-        data,
-        x="PCT",
-        y="BAR_GROUP",
-        color=color,
-        orientation="h",
-        text=text,
-        custom_data=custom_data if custom_data else color,
-        color_discrete_sequence=color_scheme,
+    selected_idx = (
+        data.index[data[color] == active_label].tolist() if active_label else None
     )
 
-    if active_label is not None:
-        for trace in fig.data:
-            if trace.name == active_label:
-                trace.marker.opacity = 1.0
-                trace.textfont.color = "rgba(0,0,0,1)"
-            else:
-                trace.marker.opacity = 0.2
-                trace.textfont.color = "rgba(0,0,0,0.2)"
+    fig = go.Figure(
+        go.Bar(
+            x=data["PCT"],
+            y=data["BAR_GROUP"],
+            orientation="h",
+            text=data["PCT"],
+            customdata=data[custom_data] if custom_data else data["BAR_GROUP"],
+            marker=dict(color=color_scheme),
+            selectedpoints=selected_idx,
+        )
+    )
 
     fig.update_traces(
         texttemplate="%{text:.0f}%",

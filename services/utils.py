@@ -30,8 +30,8 @@ def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=
         dict: Dictionary of SQL filter column names and their selected values.
     """
     filters = {}
-    if group_click and group_click.get("points"):
-        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
+    if group_click:
+        filters["ENCOUNTER_GROUP"] = group_click
     if encounter_type_click and encounter_type_click.get("points"):
         filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
     if ccsr_click and ccsr_click.get("points"):

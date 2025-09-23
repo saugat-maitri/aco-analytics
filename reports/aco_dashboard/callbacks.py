@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from dash import Input, Output, callback
+from dash import Input, Output, callback, ctx
 
 from components.bar_chart import horizontal_bar_chart, single_stacked_bar
 from components.demographics_card import demographics_card
@@ -28,6 +28,23 @@ from .data import (
 
 
 @callback(
+    Output("active-filter-store", "data"),
+    Input("selected-encounter-group-store", "data"),
+    Input("condition-ccsr-chart", "selectedData"),
+)
+def update_active_filter(selected_group, selected_ccsr):
+    if ctx.triggered_id == "selected-encounter-group-store" and selected_group:
+        return extract_sql_filters(group_click=selected_group)
+    elif (
+        ctx.triggered_id == "condition-ccsr-chart"
+        and selected_ccsr
+        and selected_ccsr.get("points")
+    ):
+        return extract_sql_filters(ccsr_click=selected_ccsr)
+    return None
+
+
+@callback(
     Output("comparison-pmpm", "children"), Input("comparison-period-dropdown", "value")
 )
 def update_comparison_text(comparison_period):
@@ -39,7 +56,7 @@ def update_comparison_text(comparison_period):
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
-    Input("encounter-group-chart", "selectedData"),
+    Input("selected-encounter-group-store", "data"),
     Input("condition-ccsr-chart", "selectedData"),
 )
 def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_click):
@@ -65,7 +82,7 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
     Input("comparison-period-dropdown", "value"),
-    Input("encounter-group-chart", "selectedData"),
+    Input("selected-encounter-group-store", "data"),
     Input("condition-ccsr-chart", "selectedData"),
 )
 def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr_click):
@@ -99,7 +116,7 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr
     Output("condition-ccsr-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "selectedData"),
+    Input("selected-encounter-group-store", "data"),
 )
 def update_condition_ccsr_cost_driver_graph(start_date, end_date, group_click):
     try:
@@ -177,12 +194,43 @@ def update_demographic_data(start_date, end_date, comparison_period):
 
 
 @callback(
+    Output("selected-encounter-group-store", "data"),
+    Output("encounter-group-chart", "selectedData"),
+    Output("encounter-group-percentage-chart", "selectedData"),
+    Input("encounter-group-chart", "selectedData"),
+    Input("encounter-group-percentage-chart", "selectedData"),
+    prevent_initial_call=True,
+)
+def sync_selected_group(chart_click, percentage_click):
+    if (
+        ctx.triggered_id == "encounter-group-chart"
+        and chart_click
+        and chart_click.get("points")
+    ):
+        return chart_click["points"][0]["y"], chart_click, chart_click
+    elif (
+        ctx.triggered_id == "encounter-group-percentage-chart"
+        and percentage_click
+        and percentage_click.get("points")
+    ):
+        return (
+            percentage_click["points"][0]["customdata"][0],
+            percentage_click,
+            percentage_click,
+        )
+    return None, None, None
+
+
+@callback(
     Output("encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("selected-encounter-group-store", "data"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
+def update_pmpm_performance_vs_expected(
+    start_date, end_date, selected_group, selected_ccsr
+):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
@@ -206,6 +254,7 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
                 "    PMPM: %{text}    <br><br>"
                 "<extra></extra>"
             ),
+            active_label=selected_group,
         )
 
     except Exception as e:
@@ -217,21 +266,15 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
     Output("encounter-group-percentage-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "selectedData"),
+    Input("selected-encounter-group-store", "data"),
 )
-def update_encounter_group_percentage_chart(start_date, end_date, group_click):
+def update_encounter_group_percentage_chart(start_date, end_date, selected_group):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
-
-        encounter_group = (
-            group_click["points"][0]["y"]
-            if group_click and group_click.get("points")
-            else None
-        )
 
         return single_stacked_bar(
             data=data,
@@ -246,7 +289,7 @@ def update_encounter_group_percentage_chart(start_date, end_date, group_click):
             ),
             color_scheme=["#64b0e1", "#ffcb09", "#1dc274", "#0096b5"],
             height=90,
-            active_label=encounter_group,
+            active_label=selected_group,
         )
 
     except Exception as e:
@@ -258,7 +301,7 @@ def update_encounter_group_percentage_chart(start_date, end_date, group_click):
     Output("paid-by-cohort-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("encounter-group-chart", "selectedData"),
+    Input("selected-encounter-group-store", "data"),
     Input("condition-ccsr-chart", "selectedData"),
 )
 def update_cohort_data(start_date, end_date, group_click, ccsr):
