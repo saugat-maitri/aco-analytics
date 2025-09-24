@@ -18,24 +18,26 @@ def dt_to_yyyymm(dt):
     return dt.year * 100 + dt.month
 
 
-def extract_sql_filters(group_click=None, encounter_type_click=None, ccsr_click=None):
+def extract_sql_filters(
+    group_selection=None, encounter_type_selection=None, ccsr_category_selection=None
+):
     """Extract SQL filter values from selected data points in interactive charts.
 
     Args:
-        group_click (dict, optional): Click data for encounter group selection.
-        encounter_type_click (dict, optional): Click data for encounter type selection.
-        ccsr_click (dict, optional): Click data for CCSR category selection.
+        group_selection (dict, optional): Selected encounter group.
+        encounter_type_selection (dict, optional): Selected encounter type.
+        ccsr_category_selection (dict, optional): Selected CCSR category.
 
     Returns:
         dict: Dictionary of SQL filter column names and their selected values.
     """
     filters = {}
-    if group_click and group_click.get("points"):
-        filters["ENCOUNTER_GROUP"] = group_click["points"][0]["y"]
-    if encounter_type_click and encounter_type_click.get("points"):
-        filters["ENCOUNTER_TYPE"] = encounter_type_click["points"][0]["y"]
-    if ccsr_click and ccsr_click.get("points"):
-        ccsr_data = ccsr_click["points"][0]["customdata"]
+    if group_selection and group_selection.get("points"):
+        filters["ENCOUNTER_GROUP"] = group_selection["points"][0]["y"]
+    if encounter_type_selection and encounter_type_selection.get("points"):
+        filters["ENCOUNTER_TYPE"] = encounter_type_selection["points"][0]["y"]
+    if ccsr_category_selection and ccsr_category_selection.get("points"):
+        ccsr_data = ccsr_category_selection["points"][0]["customdata"]
         filters["CCSR_CATEGORY_DESCRIPTION"] = (
             ccsr_data if ccsr_data != "other" else None
         )

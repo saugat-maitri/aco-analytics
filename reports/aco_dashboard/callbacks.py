@@ -42,7 +42,9 @@ def update_comparison_text(comparison_period):
     Input("encounter-group-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_click):
+def update_kpi_cards(
+    start_date, end_date, comparison_period, selected_group, selected_ccsr_category
+):
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -50,7 +52,9 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_
         start_date, end_date, comparison_period
     )
 
-    filters = extract_sql_filters(group_click=group_click, ccsr_click=ccsr_click)
+    filters = extract_sql_filters(
+        group_selection=selected_group, ccsr_category_selection=selected_ccsr_category
+    )
     pmpm_main = calc_kpis(start_date, end_date, filters)
     pmpm_comp = calc_kpis(start_comp, end_comp, filters)
 
@@ -68,8 +72,12 @@ def update_kpi_cards(start_date, end_date, comparison_period, group_click, ccsr_
     Input("encounter-group-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr_click):
-    filters = extract_sql_filters(group_click=group_click, ccsr_click=ccsr_click)
+def update_pmpm_trend(
+    start_date, end_date, comparison_period, selected_group, selected_ccsr_category
+):
+    filters = extract_sql_filters(
+        group_selection=selected_group, ccsr_category_selection=selected_ccsr_category
+    )
 
     df = get_trends_data(filters)
 
@@ -101,12 +109,12 @@ def update_pmpm_trend(start_date, end_date, comparison_period, group_click, ccsr
     Input("date-picker-input", "end_date"),
     Input("encounter-group-chart", "selectedData"),
 )
-def update_condition_ccsr_cost_driver_graph(start_date, end_date, group_click):
+def update_condition_ccsr_cost_driver_graph(start_date, end_date, selected_group):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(group_click=group_click)
+        filters = extract_sql_filters(group_selection=selected_group)
         ccsr_data = get_condition_ccsr_data(start_yyyymm, end_yyyymm, filters)
 
         ccsr_data["TRUNCATED_CATEGORY"] = ccsr_data["CCSR_CATEGORY_DESCRIPTION"].apply(
@@ -123,7 +131,6 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date, group_click):
                 "CCSR Category: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
         )
-
     except Exception as e:
         print(f"Error in update_condition_ccsr_cost_driver_graph: {e}")
         return f"Error loading data: {str(e)}"
@@ -182,12 +189,12 @@ def update_demographic_data(start_date, end_date, comparison_period):
     Input("date-picker-input", "end_date"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
+def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr_category):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(ccsr_click=selected_ccsr)
+        filters = extract_sql_filters(ccsr_category_selection=selected_ccsr_category)
         data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm, filters)
 
         return horizontal_bar_chart(
@@ -195,7 +202,7 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
             x="PMPM",
             y="ENCOUNTER_GROUP",
             text_fn=["${:,.0f}".format(val) for val in data["PMPM"]],
-            bar_height=40,
+            bar_height=45,
             show_tick_labels=False,
             plot_bgcolor="white",
             click_mode="event+select",
@@ -207,7 +214,6 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
                 "<extra></extra>"
             ),
         )
-
     except Exception as e:
         print(f"Error in update_pmpm_performance_vs_expected: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
@@ -217,14 +223,18 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr):
     Output("encounter-group-percentage-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("condition-ccsr-chart", "selectedData"),
 )
-def update_encounter_group_percentage_chart(start_date, end_date):
+def update_encounter_group_percentage_chart(
+    start_date, end_date, selected_ccsr_category
+):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+        filters = extract_sql_filters(ccsr_category_selection=selected_ccsr_category)
 
-        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm)
+        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm, filters)
 
         return stacked_percentage_bar(
             data=data,
@@ -232,7 +242,6 @@ def update_encounter_group_percentage_chart(start_date, end_date):
             group_col="ENCOUNTER_GROUP",
             height=90,
         )
-
     except Exception as e:
         print(f"Error in update_encounter_group_percentage_chart: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
@@ -245,12 +254,15 @@ def update_encounter_group_percentage_chart(start_date, end_date):
     Input("encounter-group-chart", "selectedData"),
     Input("condition-ccsr-chart", "selectedData"),
 )
-def update_cohort_data(start_date, end_date, group_click, ccsr):
+def update_cohort_data(start_date, end_date, selected_group, selected_ccsr_category):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(group_click=group_click, ccsr_click=ccsr)
+        filters = extract_sql_filters(
+            group_selection=selected_group,
+            ccsr_category_selection=selected_ccsr_category,
+        )
 
         data = get_cohort_data(start_yyyymm, end_yyyymm, filters)
 
@@ -262,7 +274,7 @@ def update_cohort_data(start_date, end_date, group_click, ccsr):
                 f"{format_large_number(v)} {pct:.1f}%"
                 for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])
             ],
-            bar_height=40,
+            bar_height=45,
             click_mode="event",
             show_tick_labels=True,
             text_position=None,
@@ -272,7 +284,6 @@ def update_cohort_data(start_date, end_date, group_click, ccsr):
                 "<extra></extra>"
             ),
         )
-
     except Exception as e:
         print(f"Error in update_cohort_data: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")

@@ -84,7 +84,7 @@ layout = (
                                                             dcc.Graph(
                                                                 id="encounter-group-chart",
                                                                 style={
-                                                                    "height": "270px"
+                                                                    "height": "300px"
                                                                 },
                                                             ),
                                                         ],
@@ -105,7 +105,7 @@ layout = (
                                                             dcc.Graph(
                                                                 id="paid-by-cohort-chart",
                                                                 style={
-                                                                    "height": "270px"
+                                                                    "height": "300px"
                                                                 },
                                                             ),
                                                         ],
@@ -130,21 +130,24 @@ layout = (
                                     )
                                 ),
                                 dbc.Card(
-                                    dbc.CardBody(
-                                        [
-                                            html.H5(
-                                                "PMPM By CCSR Category (vs Comparison Period)",
-                                                className="mb-2 text-teal-blue",
-                                            ),
-                                            dcc.Graph(
-                                                id="condition-ccsr-chart",
-                                            ),
-                                        ],
-                                        style={
-                                            "overflowY": "auto",
-                                            "maxHeight": "400px",
-                                        },
-                                    )
+                                    [
+                                        html.H5(
+                                            "PMPM By CCSR Category (vs Comparison Period)",
+                                            className="m-3 text-teal-blue",
+                                        ),
+                                        dbc.CardBody(
+                                            [
+                                                dcc.Graph(
+                                                    id="condition-ccsr-chart",
+                                                ),
+                                            ],
+                                            style={
+                                                "overflowY": "auto",
+                                                "maxHeight": "435px",
+                                            },
+                                            className="mb-3",
+                                        ),
+                                    ]
                                 ),
                             ],
                             gap=3,
