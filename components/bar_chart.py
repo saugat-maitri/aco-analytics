@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
@@ -102,8 +103,8 @@ def horizontal_bar_chart(
     data,
     x,
     y,
-    color_fn=None,
-    text_fn=None,
+    part: Optional[str] = None,
+    text=None,
     margin=dict(l=20, r=20, t=0, b=0, pad=5),
     marker_color="#64AFE0",
     bar_height=20,
@@ -123,10 +124,9 @@ def horizontal_bar_chart(
         data (pandas.DataFrame): Input DataFrame containing the data to plot.
         x (array-like): Values for the horizontal bars (bar lengths). Can be a pandas Series or list.
         y (array-like): Labels for the bars (y-axis).
-        color_fn (callable, optional): Function to determine bar colors based on x values. Defaults to None.
-        text_fn (callable, optional): Function to determine text display for each bar based on x values. Defaults to None.
+        text (callable, optional): Function to determine text display for each bar based on x values. Defaults to None.
         margin (dict, optional): Chart margins in format {l, r, t, b, pad}. Defaults to {l:20, r:20, t:20, b:20, pad:5}. pad is the padding between the plotting area and the axis lines.
-        marker_color (str, optional): Color(s) for bars. Used if color_fn is None.
+        marker_color (str, optional): Color(s) for bars. Defaults to '#64AFE0'.
         bar_height (int, optional): Height of each bar in pixels. Defaults to 20.
         show_tick_labels (bool, optional): Whether to show x-axis tick labels. Defaults to True.
         plot_bgcolor (str, optional): Background color of the plot. Defaults to 'white'.
@@ -155,25 +155,42 @@ def horizontal_bar_chart(
 
     x_value = data[x]
     y_value = data[y]
-    custom = (
-        custom_data if custom_data is not None else y_value
-    )  # Use custom data if provided, else use y values fot the text
 
-    max_value = max(x_value) if not x_value.empty else 0
-    n_bars = len(y_value) if not y_value.empty else 1
-    x_range_max = max_value * 1.2 if max_value > 0 else 1
-    min_height = 200
-    fig_height = max(
-        min_height, n_bars * bar_height + 100
-    )  # Define the height of the bar to maintain the proper height of graph
+    if part and part in data.columns:
+        data["Part"] = data[part].fillna(0)
+    else:
+        data["Part"] = 0
+
+    data["Remaining"] = data[x] - data["Part"]
+    if hover_template is None:
+        hover_template = (
+            "Category: %{y}<br>"
+            "Total: %{customdata[0]}<br>"
+            "Highlighted: %{customdata[1]}<extra></extra>"
+        )
+
+    custom = (
+        np.stack([data[x], data["Part"]], axis=-1)
+        if custom_data is None
+        else custom_data
+    ) # Use custom data if provided, else use y values fot the text
+    
+
+    # max_value = max(x_value) if not x_value.empty else 0
+    # n_bars = len(y_value) if not y_value.empty else 1
+    # x_range_max = max_value * 1.2 if max_value > 0 else 1
+    # min_height = 200
+    # fig_height = max(
+    #     min_height, n_bars * bar_height + 100
+    # )  # Define the height of the bar to maintain the proper height of graph
 
     fig = go.Figure(
         go.Bar(
             x=x_value,
             y=y_value,
             orientation="h",
-            marker_color=color_fn if color_fn else marker_color,
-            text=text_fn,
+            marker_color=marker_color,
+            text=text,
             textposition=text_position,
             hovertemplate=hover_template,
             hoverlabel=dict(
@@ -184,13 +201,26 @@ def horizontal_bar_chart(
         )
     )
 
+    for i, row in data.iterrows():
+        if row["Part"] > 0:
+            fig.add_shape(
+                type="rect",
+                x0=0,
+                x1=row["Part"],
+                y0=i - 0.4,
+                y1=i + 0.4,
+                fillcolor="blue",
+                line_width=0,
+                layer="above"
+            )
+
     fig.update_layout(
         margin=margin,
         yaxis=dict(autorange="reversed"),
-        xaxis=dict(showticklabels=show_tick_labels, range=[0, x_range_max]),
+        # xaxis=dict(showticklabels=show_tick_labels, range=[0, x_range_max]),
         plot_bgcolor=plot_bgcolor,
         clickmode=click_mode,
-        height=fig_height,
+        # height=fig_height,
     )
     return fig
 
