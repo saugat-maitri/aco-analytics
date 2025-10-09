@@ -5,9 +5,9 @@ from dash import html
 def demographics_card(
     title, value, comparison_value, comparison_period, value_suffix=None
 ):
-    display_value = f"{value}{value_suffix}" if value_suffix else value
+    display_value = f"{value:,}{value_suffix}" if value_suffix else f"{value:,}"
     comparison_display_value = (
-        f"{comparison_value}{value_suffix}" if value_suffix else comparison_value
+        f"{comparison_value}{value_suffix}" if value_suffix else f"{comparison_value:,}"
     )
 
     percentage_change = (

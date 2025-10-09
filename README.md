@@ -68,7 +68,7 @@ aco-analytics/
 
 2. **Clone the repository:**
    ```bash
-   git clone https://github.com/saugat-maitri/aco-analytics
+   git clone https://github.com/tuva-health/tuva_dash.git
    cd aco-analytics
    ```
 
