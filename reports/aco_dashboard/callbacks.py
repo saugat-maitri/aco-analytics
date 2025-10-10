@@ -55,13 +55,13 @@ def update_kpi_cards(
     filters = extract_sql_filters(
         group_selection=selected_group, ccsr_category_selection=selected_ccsr_category
     )
-    pmpm_main = calc_kpis(start_date, end_date, filters)
-    pmpm_comp = calc_kpis(start_comp, end_comp, filters)
+    pmpm_main, pmpm_expected = calc_kpis(start_date, end_date, filters)
+    pmpm_comp, pmpm_expected_comp = calc_kpis(start_comp, end_comp, filters)
 
-    # Comparison values (dummy for now)
-    expected = 300
     # Return dynamic cards
-    return (kpi_card("PMPM Cost", pmpm_main, pmpm_comp, expected, "comparison-pmpm"),)
+    return (
+        kpi_card("PMPM Cost", pmpm_main, pmpm_comp, pmpm_expected, "comparison-pmpm"),
+    )
 
 
 @callback(

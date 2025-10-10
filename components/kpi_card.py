@@ -1,23 +1,17 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
+from services.utils import calculate_change_metrics
+
 
 def kpi_card(title, value, comparison_value, expected_value, comparison_id):
-    try:
-        value_float = float(value)
-        comparison_float = float(comparison_value)
-        change_ratio = (
-            (value_float - comparison_float) / comparison_float
-            if comparison_float != 0
-            else 0
-        )
-        comparison_percent = f"{change_ratio:+.1%}"  # + adds sign
-        arrow = "▲" if change_ratio >= 0 else "▼"
-        arrow_color = "red" if change_ratio >= 0 else "green"
-    except (TypeError, ValueError, ZeroDivisionError):
-        comparison_percent = "N/A"
-        arrow = ""
-        arrow_color = "black"
+    comparison_percent, comparison_arrow, comparison_arrow_color = (
+        calculate_change_metrics(value, comparison_value)
+    )
+
+    expected_changed, expected_arrow, expected_arrow_color = calculate_change_metrics(
+        value, expected_value
+    )
 
     is_utilization = comparison_id == "comparison-utilization"
     display_value = (
@@ -78,11 +72,14 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
                                             html.P(
                                                 [
                                                     comparison_percent,
-                                                    html.Span(arrow, className="ms-2"),
+                                                    html.Span(
+                                                        comparison_arrow,
+                                                        className="ms-2",
+                                                    ),
                                                 ],
                                                 className="fw-semibold",
                                                 style={
-                                                    "color": arrow_color,
+                                                    "color": comparison_arrow_color,
                                                     "fontSize": "18px",
                                                 },
                                             ),
@@ -97,12 +94,14 @@ def kpi_card(title, value, comparison_value, expected_value, comparison_id):
                                         [
                                             html.P(
                                                 [
-                                                    "0.0%",  # Replace with real expected delta if needed
-                                                    html.Span("▲", className="ms-2"),
+                                                    expected_changed,
+                                                    html.Span(
+                                                        expected_arrow, className="ms-2"
+                                                    ),
                                                 ],
                                                 className="fw-semibold",
                                                 style={
-                                                    "color": "red",
+                                                    "color": expected_arrow_color,
                                                     "fontSize": "18px",
                                                 },
                                             ),
