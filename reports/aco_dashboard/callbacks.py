@@ -22,7 +22,8 @@ from .data import (
     get_cohort_data,
     get_condition_ccsr_data,
     get_demographic_data,
-    get_pmpm_performance_vs_expected_data,
+    get_encounter_group_expected_pmpm,
+    get_encounter_group_pmpm,
     get_trends_data,
 )
 
@@ -195,24 +196,47 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr_cate
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
         filters = extract_sql_filters(ccsr_category_selection=selected_ccsr_category)
-        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm, filters)
 
+        data = get_encounter_group_pmpm(start_yyyymm, end_yyyymm, filters)
+        expected_pmpm = get_encounter_group_expected_pmpm(
+            start_yyyymm, end_yyyymm
+        ).melt(var_name="ENCOUNTER_GROUP", value_name="PREDICTED_PMPM")
+
+        # Merge actual and expected data
+        merged_data = pd.merge(data, expected_pmpm, on="ENCOUNTER_GROUP", how="left")
+
+        # Determine if expected PMPM data is available
+        show_expected = not merged_data["PREDICTED_PMPM"].isna().all()
+
+        # Configure hover data based on expected PMPM availability
+        if show_expected:
+            custom_data = merged_data[["ENCOUNTER_GROUP", "PMPM", "PREDICTED_PMPM"]]
+            hover_template = (
+                "Encounter Group: %{customdata[0]}<br>"
+                "Actual PMPM: %{customdata[1]:,.2f}<br>"
+                "Expected PMPM: %{customdata[2]:,.2f}<br>"
+                "<extra></extra>"
+            )
+        else:
+            custom_data = merged_data[["ENCOUNTER_GROUP", "PMPM"]]
+            hover_template = (
+                "Encounter Group: %{customdata[0]}<br>"
+                "Actual PMPM: %{customdata[1]:,.2f}<br>"
+                "<extra></extra>"
+            )
         return horizontal_bar_chart(
-            data=data,
+            data=merged_data,
             x="PMPM",
             y="ENCOUNTER_GROUP",
-            text_fn=["${:,.0f}".format(val) for val in data["PMPM"]],
+            target="PREDICTED_PMPM" if show_expected else None,
+            text_fn=["${:,.0f}".format(val) for val in merged_data["PMPM"]],
             bar_height=45,
             show_tick_labels=False,
             plot_bgcolor="white",
             click_mode="event+select",
-            custom_data=data["ENCOUNTER_GROUP"],
+            custom_data=custom_data,
             text_position="outside",
-            hover_template=(
-                "    Encounter Group: %{customdata}   <br>"
-                "    PMPM: %{text}    <br><br>"
-                "<extra></extra>"
-            ),
+            hover_template=hover_template,
         )
     except Exception as e:
         print(f"Error in update_pmpm_performance_vs_expected: {e}")
@@ -234,7 +258,7 @@ def update_encounter_group_percentage_chart(
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
         filters = extract_sql_filters(ccsr_category_selection=selected_ccsr_category)
 
-        data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm, filters)
+        data = get_encounter_group_pmpm(start_yyyymm, end_yyyymm, filters)
 
         return stacked_percentage_bar(
             data=data,

@@ -100,6 +100,7 @@ def horizontal_bar_chart(
     data,
     x,
     y,
+    target=None,
     color_fn=None,
     text_fn=None,
     margin=dict(l=20, r=20, t=0, b=0, pad=5),
@@ -120,6 +121,7 @@ def horizontal_bar_chart(
         data (pandas.DataFrame): Input DataFrame containing the data to plot.
         x (array-like): Values for the horizontal bars (bar lengths). Can be a pandas Series or list.
         y (array-like): Labels for the bars (y-axis).
+        target (str, optional): Column name for target values to display as vertical lines on bars. Defaults to None.
         color_fn (callable, optional): Function to determine bar colors based on x values. Defaults to None.
         text_fn (callable, optional): Function to determine text display for each bar based on x values. Defaults to None.
         margin (dict, optional): Chart margins in format {l, r, t, b, pad}. Defaults to {l:20, r:20, t:20, b:20, pad:5}. pad is the padding between the plotting area and the axis lines.
@@ -147,17 +149,10 @@ def horizontal_bar_chart(
 
     x_value = data[x]
     y_value = data[y]
+
     custom = (
         custom_data if custom_data is not None else y_value
     )  # Use custom data if provided, else use y values fot the text
-
-    max_value = max(x_value) if not x_value.empty else 0
-    n_bars = len(y_value) if not y_value.empty else 1
-    x_range_max = max_value * 1.2 if max_value > 0 else 1
-    min_height = 200
-    fig_height = max(
-        min_height, n_bars * bar_height + 100
-    )  # Define the height of the bar to maintain the proper height of graph
 
     fig = go.Figure(
         go.Bar(
@@ -174,6 +169,28 @@ def horizontal_bar_chart(
             customdata=custom,
         )
     )
+
+    max_value = max(x_value) if not x_value.empty else 0
+
+    if target is not None and target in data.columns:
+        max_value = max(max_value, data[target].max())
+        for idx, row in data.iterrows():
+            fig.add_shape(
+                type="line",
+                x0=row[target],
+                x1=row[target],
+                y0=idx - 0.2,
+                y1=idx + 0.2,
+                line=dict(color="black", width=3),
+            )
+
+    n_bars = len(y_value) if not y_value.empty else 1
+    x_range_max = max_value * 1.2 if max_value > 0 else 1
+    min_height = 200
+    fig_height = max(
+        min_height, n_bars * bar_height + 100
+    )  # Define the height of the bar to maintain the proper height of graph
+
     fig.update_layout(
         margin=margin,
         yaxis=dict(autorange="reversed"),
