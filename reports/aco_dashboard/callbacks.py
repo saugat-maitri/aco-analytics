@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from dash import Input, Output, callback
+from dash import Input, Output, State, callback, html, no_update
 
 from components.bar_chart import horizontal_bar_chart, stacked_percentage_bar
 from components.demographics_card import demographics_card
@@ -287,3 +287,85 @@ def update_cohort_data(start_date, end_date, selected_group, selected_ccsr_categ
     except Exception as e:
         print(f"Error in update_cohort_data: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
+
+
+@callback(
+    Output("floating-drillthrough-btn-container", "children"),
+    Input("drillthrough-selection", "data"),
+)
+def show_floating_button(selection):
+    if not selection:
+        return None
+
+    label = selection["label"]
+
+    button_text = f"Drill Through → {label}"
+    button = html.Button(
+        button_text,
+        id="floating-drillthrough-btn",
+        n_clicks=0,
+        style={
+            "backgroundColor": "#007bff",
+            "color": "white",
+            "border": "none",
+            "padding": "10px 20px",
+            "borderRadius": "8px",
+            "boxShadow": "0 2px 8px rgba(0,0,0,0.2)",
+            "cursor": "pointer",
+            "fontSize": "12px",
+            "fontWeight": "600",
+        },
+    )
+
+    return button
+
+
+@callback(
+    Output("drillthrough-selection", "data", allow_duplicate=True),
+    Input("condition-ccsr-chart", "selectedData"),
+    prevent_initial_call=True,
+)
+def select_condition_ccsr(selectedData):
+    if not selectedData or "points" not in selectedData:
+        return None
+
+    ccsr_name = selectedData["points"][0].get("customdata") or selectedData["points"][
+        0
+    ].get("y")
+    return {"chart": "condition-ccsr", "label": ccsr_name}
+
+
+@callback(
+    Output("drillthrough-selection", "data", allow_duplicate=True),
+    Input("encounter-group-chart", "selectedData"),
+    prevent_initial_call=True,
+)
+def select_encounter_group(selectedData):
+    if not selectedData or "points" not in selectedData:
+        return None
+
+    group_name = selectedData["points"][0].get("customdata") or selectedData["points"][
+        0
+    ].get("y")
+    return {"chart": "encounter-group", "label": group_name}
+
+
+@callback(
+    Output("redirect-url", "href"),
+    Input("floating-drillthrough-btn", "n_clicks"),
+    State("drillthrough-selection", "data"),
+    prevent_initial_call=True,
+)
+def handle_redirect(n_clicks, selection):
+    if not n_clicks or not selection:
+        return no_update
+
+    chart = selection["chart"]
+    label = selection["label"]
+
+    if chart == "condition-ccsr":
+        return f"/condition-ccsr?ccsr={label}"
+    elif chart == "encounter-group":
+        return f"/encounter-group?group={label}"
+    else:
+        return no_update
