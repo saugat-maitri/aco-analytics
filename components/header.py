@@ -33,6 +33,10 @@ def header():
                 className="d-flex align-items-center",
             ),
             html.Div(
+                id="drillthrough-title",
+                style={"fontSize": "20px", "fontWeight": "semibold"},
+            ),
+            html.Div(
                 [
                     dbc.Stack(
                         [

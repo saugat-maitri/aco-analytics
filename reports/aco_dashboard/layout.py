@@ -17,8 +17,7 @@ layout = (
                     "zIndex": 10,
                 },
             ),
-            dcc.Store(id="drillthrough-selection", storage_type="local"),
-            dcc.Location(id="redirect-url", refresh=True),
+            dcc.Store(id="drillthrough-selection"),
             dbc.Row(
                 [
                     dbc.Col(

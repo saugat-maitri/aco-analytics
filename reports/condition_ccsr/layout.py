@@ -1,4 +1,7 @@
-from dash import html, register_page
+import dash_bootstrap_components as dbc
+from dash import dcc, html, register_page
+
+from .callbacks import *
 
 register_page(
     module=__name__,
@@ -10,7 +13,167 @@ register_page(
 
 layout = (
     html.Div(
-        "Condition CCSR",
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dbc.Stack(
+                            [
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        [
+                                            html.P(
+                                                "PMPM Cost",
+                                            ),
+                                            html.H1("$420"),
+                                        ]
+                                    ),
+                                ),
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        [
+                                            html.P(
+                                                "Cost Per",
+                                            ),
+                                            html.H1("$2K"),
+                                        ]
+                                    ),
+                                ),
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        [
+                                            html.P(
+                                                "PKPY",
+                                            ),
+                                            html.H1("9.2K"),
+                                        ]
+                                    ),
+                                ),
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        [
+                                            html.P(
+                                                "Members",
+                                            ),
+                                            html.H1("9K"),
+                                        ]
+                                    ),
+                                ),
+                            ],
+                            gap=3,
+                        ),
+                        width=2,
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.Stack(
+                                [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    [
+                                                        dbc.CardBody(
+                                                            [
+                                                                html.H5(
+                                                                    "PMPM by Encounter Group (vs Expected)",
+                                                                    className="mb-2 text-teal-blue",
+                                                                    style={
+                                                                        "text-wrap": "nowrap"
+                                                                    },
+                                                                ),
+                                                                dcc.Graph(
+                                                                    id="ccsr-encounter-group-chart",
+                                                                    style={
+                                                                        "height": "250px"
+                                                                    },
+                                                                ),
+                                                            ],
+                                                        )
+                                                    ],
+                                                ),
+                                                width=6,
+                                            ),
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    [
+                                                        dbc.CardBody(
+                                                            [
+                                                                html.H5(
+                                                                    "PMPM by Encounter Type",
+                                                                    className="mb-2 text-teal-blue",
+                                                                ),
+                                                                dcc.Graph(
+                                                                    id="ccsr-encounter-type-chart",
+                                                                    style={
+                                                                        "height": "250px"
+                                                                    },
+                                                                ),
+                                                            ],
+                                                        )
+                                                    ],
+                                                ),
+                                                width=6,
+                                            ),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    [
+                                                        html.H5(
+                                                            "Paid Amount by Primary Diagnosis",
+                                                            className="m-3 text-teal-blue",
+                                                        ),
+                                                        dbc.CardBody(
+                                                            [
+                                                                dcc.Graph(
+                                                                    id="ccsr-paid-by-diagnosis-chart",
+                                                                ),
+                                                            ],
+                                                            style={"height": "300px"},
+                                                            className="mb-3",
+                                                        ),
+                                                    ]
+                                                ),
+                                                width=6,
+                                            ),
+                                            dbc.Col(
+                                                dbc.Card(
+                                                    [
+                                                        html.H5(
+                                                            "Cost Per by Facility",
+                                                            className="m-3 text-teal-blue",
+                                                        ),
+                                                        dbc.CardBody(
+                                                            [
+                                                                dcc.Graph(
+                                                                    id="ccsr-cost-per-facility-chart",
+                                                                ),
+                                                            ],
+                                                            style={
+                                                                "overflowY": "auto",
+                                                                "maxHeight": "300px",
+                                                            },
+                                                            className="mb-3",
+                                                        ),
+                                                    ]
+                                                ),
+                                                width=6,
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                                gap=3,
+                            )
+                        ],
+                        width=10,
+                    ),
+                ],
+                className="mt-4",
+            ),
+        ],
         className="bg-light-subtle",
     ),
 )

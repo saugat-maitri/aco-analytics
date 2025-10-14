@@ -351,7 +351,7 @@ def select_encounter_group(selectedData):
 
 
 @callback(
-    Output("redirect-url", "href"),
+    Output("url", "href"),
     Input("floating-drillthrough-btn", "n_clicks"),
     State("drillthrough-selection", "data"),
     prevent_initial_call=True,
