@@ -21,26 +21,50 @@ def dt_to_yyyymm(dt):
 def extract_sql_filters(
     group_selection=None, encounter_type_selection=None, ccsr_category_selection=None
 ):
-    """Extract SQL filter values from selected data points in interactive charts.
+    """Extract SQL filter values from selected data points or direct string inputs.
 
     Args:
-        group_selection (dict, optional): Selected encounter group.
-        encounter_type_selection (dict, optional): Selected encounter type.
-        ccsr_category_selection (dict, optional): Selected CCSR category.
+        group_selection (dict or str, optional): The selected encounter group.
+        encounter_type_selection (dict or str, optional): The selected encounter type.
+        ccsr_category_selection (dict or str, optional): The selected CCSR category.
 
     Returns:
-        dict: Dictionary of SQL filter column names and their selected values.
+        dict: A dictionary of SQL filter column names and their selected values.
     """
     filters = {}
-    if group_selection and group_selection.get("points"):
-        filters["ENCOUNTER_GROUP"] = group_selection["points"][0]["y"]
-    if encounter_type_selection and encounter_type_selection.get("points"):
-        filters["ENCOUNTER_TYPE"] = encounter_type_selection["points"][0]["y"]
-    if ccsr_category_selection and ccsr_category_selection.get("points"):
-        ccsr_data = ccsr_category_selection["points"][0]["customdata"]
-        filters["CCSR_CATEGORY_DESCRIPTION"] = (
-            ccsr_data if ccsr_data != "other" else None
-        )
+
+    # Handle Encounter Group selection
+    if group_selection:
+        if isinstance(group_selection, str):
+            filters["ENCOUNTER_GROUP"] = group_selection
+        elif isinstance(group_selection, dict) and group_selection.get("points"):
+            filters["ENCOUNTER_GROUP"] = group_selection["points"][0]["y"]
+
+    # Handle Encounter Type selection
+    if encounter_type_selection:
+        if isinstance(encounter_type_selection, str):
+            filters["ENCOUNTER_TYPE"] = encounter_type_selection
+        elif isinstance(
+            encounter_type_selection, dict
+        ) and encounter_type_selection.get("points"):
+            filters["ENCOUNTER_TYPE"] = encounter_type_selection["points"][0]["y"]
+
+    # Handle CCSR Category selection
+    if ccsr_category_selection:
+        ccsr_data = None
+        if isinstance(ccsr_category_selection, str):
+            ccsr_data = ccsr_category_selection
+        elif isinstance(ccsr_category_selection, dict) and ccsr_category_selection.get(
+            "points"
+        ):
+            ccsr_data = ccsr_category_selection["points"][0]["customdata"]
+
+        if ccsr_data is not None:
+            # If the extracted data is "other", map it to None; otherwise, use the data.
+            filters["CCSR_CATEGORY_DESCRIPTION"] = (
+                ccsr_data if ccsr_data != "other" else None
+            )
+
     return filters
 
 

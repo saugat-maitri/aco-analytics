@@ -18,6 +18,13 @@ SELECT
     PAID_AMOUNT
 FROM FACT_CLAIMS LIMIT 100000
 """
+fact_encounters_query = """
+SELECT
+    ENCOUNTER_ID,
+    FACILITY_TYPE
+FROM FACT_ENCOUNTERS LIMIT 100000
+"""
+
 fact_member_months_query = """
 SELECT
     PERSON_ID,
@@ -60,6 +67,7 @@ FROM DIM_MEMBER
 
 table_list = [
     {"table_name": "FACT_CLAIMS", "query": fact_claims_query},
+    {"table_name": "FACT_ENCOUNTERS", "query": fact_encounters_query},
     {"table_name": "FACT_MEMBER_MONTHS", "query": fact_member_months_query},
     {"table_name": "DIM_ENCOUNTER_GROUP", "query": dim_encounter_group_query},
     {"table_name": "DIM_ENCOUNTER_TYPE", "query": dim_encounter_type_query},

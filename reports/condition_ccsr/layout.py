@@ -106,7 +106,8 @@ layout = (
                                                                 dcc.Graph(
                                                                     id="ccsr-encounter-type-chart",
                                                                     style={
-                                                                        "height": "250px"
+                                                                        "overflowY": "auto",
+                                                                        "maxHeight": "250px",
                                                                     },
                                                                 ),
                                                             ],
@@ -149,7 +150,7 @@ layout = (
                                                         dbc.CardBody(
                                                             [
                                                                 dcc.Graph(
-                                                                    id="ccsr-cost-per-facility-chart",
+                                                                    id="ccsr-cost-per-by-facility-chart",
                                                                 ),
                                                             ],
                                                             style={
