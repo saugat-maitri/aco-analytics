@@ -233,7 +233,7 @@ def get_encounter_group_expected_pmpm(
     start_yyyymm: int, end_yyyymm: int
 ) -> pd.DataFrame:
     query = f"""
-            with encounter_group_expected_pmpm as (
+            with encounter_group_expected_paid_amount as (
                 SELECT 
                     SUM(fev.outpatient_paid_amount_pred * fmm.monthallocationfactor) AS predicted_outpatient_paid_amount,
                     SUM(fev.inpatient_paid_amount_pred * fmm.monthallocationfactor) AS predicted_inpatient_paid_amount,
@@ -272,8 +272,8 @@ def get_encounter_group_expected_pmpm(
                 THEN eegp.predicted_other_paid_amount / mm.MEMBER_MONTHS_COUNT 
                 ELSE 0 
             END AS 'other'
-        FROM encounter_group_expected_pmpm eegp
-        CROSS JOIN member_months AS MM
+        FROM encounter_group_expected_paid_amount eegp
+        CROSS JOIN member_months AS mm
     """
     return sqlite_manager.query(query)
 

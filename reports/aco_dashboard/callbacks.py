@@ -200,17 +200,17 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr_cate
         data = get_encounter_group_pmpm(start_yyyymm, end_yyyymm, filters)
         expected_pmpm = get_encounter_group_expected_pmpm(
             start_yyyymm, end_yyyymm
-        ).melt(var_name="ENCOUNTER_GROUP", value_name="PREDICTED_PMPM")
+        ).melt(var_name="ENCOUNTER_GROUP", value_name="EXPECTED_PMPM")
 
         # Merge actual and expected data
         merged_data = pd.merge(data, expected_pmpm, on="ENCOUNTER_GROUP", how="left")
 
         # Determine if expected PMPM data is available
-        show_expected = not merged_data["PREDICTED_PMPM"].isna().all()
+        show_expected = not merged_data["EXPECTED_PMPM"].isna().all()
 
         # Configure hover data based on expected PMPM availability
         if show_expected:
-            custom_data = merged_data[["ENCOUNTER_GROUP", "PMPM", "PREDICTED_PMPM"]]
+            custom_data = merged_data[["ENCOUNTER_GROUP", "PMPM", "EXPECTED_PMPM"]]
             hover_template = (
                 "Encounter Group: %{customdata[0]}<br>"
                 "Actual PMPM: %{customdata[1]:,.2f}<br>"
@@ -228,7 +228,7 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr_cate
             data=merged_data,
             x="PMPM",
             y="ENCOUNTER_GROUP",
-            target="PREDICTED_PMPM" if show_expected else None,
+            target="EXPECTED_PMPM" if show_expected else None,
             text_fn=["${:,.0f}".format(val) for val in merged_data["PMPM"]],
             bar_height=45,
             show_tick_labels=False,
