@@ -107,28 +107,28 @@ def truncate_text(text, max_length=30):
 
 
 def format_large_number(value):
-    """Format a numeric value with a dollar sign and appropriate suffix (B, M, K).
+    """Format a numeric value with appropriate suffix (B, M, K).
 
     Args:
         value (float): The number to format.
 
     Returns:
-        str: Formatted string with dollar sign and suffix.
+        str: Formatted string with suffix.
 
     Examples:
-            - 1234567890 -> "$1B"
-            - 1234567 -> "$1M"
-            - 1234 -> "$1K"
-            - 123.45 -> "$123.45"
+            - 1234567890 -> "1B"
+            - 1234567 -> "1M"
+            - 1234 -> "1.2K"
+            - 123.45 -> "123"
     """
     if value >= 1_000_000_000:
-        return f"${value / 1_000_000_000:.0f}B"
+        return f"{value / 1_000_000_000:.0f}B"
     elif value >= 1_000_000:
-        return f"${value / 1_000_000:.0f}M"
+        return f"{value / 1_000_000:.0f}M"
     elif value >= 1_000:
-        return f"${value / 1_000:.0f}K"
+        return f"{value / 1_000:.1f}K"
     else:
-        return f"${value:.2f}"
+        return f"{value:.0f}"
 
 
 def get_comparison_period(

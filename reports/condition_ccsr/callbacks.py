@@ -4,14 +4,59 @@ import plotly.express as px
 from dash import Input, Output, callback
 
 from components.bar_chart import horizontal_bar_chart
+from components.metric_card import metric_card
 from components.no_data_figure import no_data_figure
 from components.treemap_chart import treemap_chart
 from reports.aco_dashboard.data import get_pmpm_performance_vs_expected_data
 from reports.condition_ccsr.data import (
+    get_ccsr_metrics_data,
     get_cost_per_by_facility_data,
     get_pmpm_by_encounter_type_data,
 )
-from services.utils import dt_to_yyyymm, extract_sql_filters
+from services.utils import dt_to_yyyymm, extract_sql_filters, format_large_number
+
+
+@callback(
+    Output("ccsr-metrics-container", "children"),
+    Input("date-picker-input", "start_date"),
+    Input("date-picker-input", "end_date"),
+    Input("drillthrough-title", "children"),
+)
+def update_ccsr_metrics(start_date, end_date, drillthrough_title):
+    try:
+        # Convert date strings to YYYYMM format for filtering
+        start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
+        filters = extract_sql_filters(ccsr_category_selection=drillthrough_title)
+        data = get_ccsr_metrics_data(start_yyyymm, end_yyyymm, filters=filters)
+        if data.empty:
+            return no_data_figure(message="No data available for the selected period.")
+
+        pmpm = data["PMPM"].iloc[0]
+        cost_per_encounter = format_large_number(data["COST_PER_ENCOUNTER"].iloc[0])
+        pkpy = format_large_number(data["PKPY"].iloc[0])
+        members = format_large_number(data["total_members"].iloc[0])
+        return [
+            metric_card(
+                title="PMPM Cost",
+                value=f"${pmpm:,.0f}",
+            ),
+            metric_card(
+                title="Cost Per Encounter",
+                value=f"${cost_per_encounter}",
+            ),
+            metric_card(
+                title="PKPY",
+                value=f"{pkpy}",
+            ),
+            metric_card(
+                title="Members",
+                value=f"{members}",
+            ),
+        ]
+    except Exception as e:
+        print(f"Error in update_ccsr_metrics: {e}")
+        return no_data_figure(message=f"Error loading data: {str(e)}")
 
 
 @callback(

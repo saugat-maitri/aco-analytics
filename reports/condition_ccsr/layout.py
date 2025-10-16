@@ -18,48 +18,8 @@ layout = (
                 [
                     dbc.Col(
                         dbc.Stack(
-                            [
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        [
-                                            html.P(
-                                                "PMPM Cost",
-                                            ),
-                                            html.H1("$420"),
-                                        ]
-                                    ),
-                                ),
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        [
-                                            html.P(
-                                                "Cost Per",
-                                            ),
-                                            html.H1("$2K"),
-                                        ]
-                                    ),
-                                ),
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        [
-                                            html.P(
-                                                "PKPY",
-                                            ),
-                                            html.H1("9.2K"),
-                                        ]
-                                    ),
-                                ),
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        [
-                                            html.P(
-                                                "Members",
-                                            ),
-                                            html.H1("9K"),
-                                        ]
-                                    ),
-                                ),
-                            ],
+                            id="ccsr-metrics-container",
+                            children=[],
                             gap=3,
                         ),
                         width=2,
@@ -107,7 +67,7 @@ layout = (
                                                                     id="ccsr-encounter-type-chart",
                                                                     style={
                                                                         "overflowY": "auto",
-                                                                        "maxHeight": "250px",
+                                                                        "height": "250px",
                                                                     },
                                                                 ),
                                                             ],

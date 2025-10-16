@@ -271,7 +271,7 @@ def update_cohort_data(start_date, end_date, selected_group, selected_ccsr_categ
             x="total_paid_amount",
             y="percent_group",
             text_fn=[
-                f"{format_large_number(v)} {pct:.1f}%"
+                f"${format_large_number(v)} {pct:.1f}%"
                 for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])
             ],
             bar_height=45,
