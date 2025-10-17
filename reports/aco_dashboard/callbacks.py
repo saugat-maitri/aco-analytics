@@ -117,19 +117,17 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date, selected_group
         filters = extract_sql_filters(group_selection=selected_group)
         ccsr_data = get_condition_ccsr_data(start_yyyymm, end_yyyymm, filters)
 
-        ccsr_data["TRUNCATED_CATEGORY"] = ccsr_data["CCSR_CATEGORY_DESCRIPTION"].apply(
-            lambda x: truncate_text(x, 35)
-        )
         return horizontal_bar_chart(
             data=ccsr_data,
             x="PMPM",
-            y="TRUNCATED_CATEGORY",
+            y="CCSR_CATEGORY_DESCRIPTION",
             text_fn=[f"${v:,.0f}" for v in ccsr_data["PMPM"]],
             show_tick_labels=False,
             custom_data=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
             hover_template=(
                 "CCSR Category: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
+            truncate_limit=40,
         )
     except Exception as e:
         print(f"Error in update_condition_ccsr_cost_driver_graph: {e}")

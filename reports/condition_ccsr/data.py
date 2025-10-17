@@ -22,6 +22,8 @@ def get_ccsr_metrics_data(
             FROM FACT_CLAIMS AS fc 
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON fc.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+            LEFT JOIN DIM_ENCOUNTER_TYPE typ
+                ON fc.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
             WHERE fc.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             {filter_clause}
             GROUP BY fc.CCSR_CATEGORY_DESCRIPTION
@@ -71,6 +73,8 @@ def get_pmpm_by_encounter_type_data(
                 typ.ENCOUNTER_TYPE,
                 SUM(PAID_AMOUNT) as TOTAL_PAID
             FROM FACT_CLAIMS clm
+            LEFT JOIN DIM_ENCOUNTER_GROUP grp
+                ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
             LEFT JOIN DIM_ENCOUNTER_TYPE typ
                 ON clm.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
@@ -97,6 +101,27 @@ def get_pmpm_by_encounter_type_data(
     return sqlite_manager.query(query, params)
 
 
+def get_paid_by_diagnosis_data(
+    start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
+) -> pd.DataFrame:
+    filter_clause, params = build_filter_clause(filters)
+    if filter_clause:
+        filter_clause = f" AND {filter_clause}"
+    query = f"""
+        SELECT
+            PRIMARY_DIAGNOSIS_DESCRIPTION,
+            SUM(PAID_AMOUNT) AS PAID_AMOUNT
+        FROM FACT_CLAIMS
+        LEFT JOIN DIM_ENCOUNTER_GROUP grp
+            ON FACT_CLAIMS.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+        WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+        {filter_clause}
+        GROUP BY PRIMARY_DIAGNOSIS_DESCRIPTION
+        ORDER BY PAID_AMOUNT DESC
+    """
+    return sqlite_manager.query(query, params)
+
+
 def get_cost_per_by_facility_data(
     start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
 ) -> pd.DataFrame:
@@ -106,12 +131,15 @@ def get_cost_per_by_facility_data(
     query = f"""
         SELECT
             COALESCE(enc.FACILITY_TYPE, '(Blank)') AS FACILITY_TYPE,
-            SUM(clm.PAID_AMOUNT) AS PAID_AMOUNT
+            COALESCE(SUM(clm.PAID_AMOUNT), 0) AS PAID_AMOUNT
         FROM FACT_CLAIMS clm
+        LEFT JOIN DIM_ENCOUNTER_GROUP grp
+            ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
         JOIN FACT_ENCOUNTERS enc
-        ON clm.ENCOUNTER_ID = enc.ENCOUNTER_ID
+            ON clm.ENCOUNTER_ID = enc.ENCOUNTER_ID
         WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
         {filter_clause}
         GROUP BY COALESCE(enc.FACILITY_TYPE, '(Blank)')
+        ORDER BY PAID_AMOUNT DESC
     """
     return sqlite_manager.query(query, params)

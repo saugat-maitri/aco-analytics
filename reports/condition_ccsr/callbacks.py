@@ -11,6 +11,7 @@ from reports.aco_dashboard.data import get_pmpm_performance_vs_expected_data
 from reports.condition_ccsr.data import (
     get_ccsr_metrics_data,
     get_cost_per_by_facility_data,
+    get_paid_by_diagnosis_data,
     get_pmpm_by_encounter_type_data,
 )
 from services.utils import dt_to_yyyymm, extract_sql_filters, format_large_number
@@ -20,15 +21,24 @@ from services.utils import dt_to_yyyymm, extract_sql_filters, format_large_numbe
     Output("ccsr-metrics-container", "children"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("ccsr-encounter-group-chart", "selectedData"),
+    Input("ccsr-encounter-type-chart", "selectedData"),
     Input("drillthrough-title", "children"),
 )
-def update_ccsr_metrics(start_date, end_date, drillthrough_title):
+def update_ccsr_metrics(
+    start_date, end_date, selected_group, selected_type, drillthrough_title
+):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(ccsr_category_selection=drillthrough_title)
+        filters = extract_sql_filters(
+            group_selection=selected_group,
+            encounter_type_selection=selected_type,
+            ccsr_category_selection=drillthrough_title,
+        )
         data = get_ccsr_metrics_data(start_yyyymm, end_yyyymm, filters=filters)
+
         if data.empty:
             return no_data_figure(message="No data available for the selected period.")
 
@@ -63,14 +73,20 @@ def update_ccsr_metrics(start_date, end_date, drillthrough_title):
     Output("ccsr-encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("ccsr-encounter-type-chart", "selectedData"),
     Input("drillthrough-title", "children"),
 )
-def update_ccsr_encounter_group_chart(start_date, end_date, drillthrough_title):
+def update_ccsr_encounter_group_chart(
+    start_date, end_date, selected_type, drillthrough_title
+):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(ccsr_category_selection=drillthrough_title)
+        filters = extract_sql_filters(
+            encounter_type_selection=selected_type,
+            ccsr_category_selection=drillthrough_title,
+        )
         data = get_pmpm_performance_vs_expected_data(
             start_yyyymm, end_yyyymm, filters=filters
         )
@@ -101,14 +117,19 @@ def update_ccsr_encounter_group_chart(start_date, end_date, drillthrough_title):
     Output("ccsr-encounter-type-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("ccsr-encounter-group-chart", "selectedData"),
     Input("drillthrough-title", "children"),
 )
-def update_ccsr_encounter_type_chart(start_date, end_date, drillthrough_title):
+def update_ccsr_encounter_type_chart(
+    start_date, end_date, selected_group, drillthrough_title
+):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(ccsr_category_selection=drillthrough_title)
+        filters = extract_sql_filters(
+            group_selection=selected_group, ccsr_category_selection=drillthrough_title
+        )
         data = get_pmpm_by_encounter_type_data(
             start_yyyymm, end_yyyymm, filters=filters
         )
@@ -129,6 +150,7 @@ def update_ccsr_encounter_type_chart(start_date, end_date, drillthrough_title):
                 "    PMPM: %{text}    <br><br>"
                 "<extra></extra>"
             ),
+            truncate_limit=20,
         )
     except Exception as e:
         print(f"Error in update_ccsr_encounter_type_chart: {e}")
@@ -139,18 +161,24 @@ def update_ccsr_encounter_type_chart(start_date, end_date, drillthrough_title):
     Output("ccsr-paid-by-diagnosis-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("ccsr-encounter-group-chart", "selectedData"),
+    Input("drillthrough-title", "children"),
 )
-def update_encounter_group_treemap(start_date, end_date):
-    # Your data fetching logic
+def update_paid_by_diagnosis_treemap(
+    start_date, end_date, selected_group, drillthrough_title
+):
     start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
     end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-    # filters = extract_sql_filters(ccsr_category_selection=selected_ccsr_category)
-    data = get_pmpm_performance_vs_expected_data(start_yyyymm, end_yyyymm, filters=None)
+    filters = extract_sql_filters(
+        group_selection=selected_group, ccsr_category_selection=drillthrough_title
+    )
+    data = get_paid_by_diagnosis_data(start_yyyymm, end_yyyymm, filters=filters)
 
     return treemap_chart(
         data=data,
-        path_columns=[px.Constant("All"), "ENCOUNTER_GROUP"],
-        values="PMPM",
+        path_columns=[px.Constant("All"), "PRIMARY_DIAGNOSIS_DESCRIPTION"],
+        values="PAID_AMOUNT",
+        hovertemplate="<b>%{label}</b><br>Paid Amount: $%{value:,.0f}<extra></extra>",
     )
 
 
@@ -158,14 +186,19 @@ def update_encounter_group_treemap(start_date, end_date):
     Output("ccsr-cost-per-by-facility-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
+    Input("ccsr-encounter-group-chart", "selectedData"),
     Input("drillthrough-title", "children"),
 )
-def update_cost_per_by_facility_chart(start_date, end_date, drillthrough_title):
+def update_cost_per_by_facility_chart(
+    start_date, end_date, selected_group, drillthrough_title
+):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(ccsr_category_selection=drillthrough_title)
+        filters = extract_sql_filters(
+            group_selection=selected_group, ccsr_category_selection=drillthrough_title
+        )
         data = get_cost_per_by_facility_data(start_yyyymm, end_yyyymm, filters=filters)
 
         return horizontal_bar_chart(
@@ -184,6 +217,7 @@ def update_cost_per_by_facility_chart(start_date, end_date, drillthrough_title):
                 "    Paid Amount: %{text}    <br><br>"
                 "<extra></extra>"
             ),
+            truncate_limit=20,
         )
     except Exception as e:
         print(f"Error in update_cost_per_by_facility_chart: {e}")

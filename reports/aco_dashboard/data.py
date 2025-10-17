@@ -194,6 +194,8 @@ def get_pmpm_performance_vs_expected_data(
             FROM FACT_CLAIMS clm
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+            LEFT JOIN DIM_ENCOUNTER_TYPE typ
+                ON clm.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
             WHERE clm.YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             {filter_clause}
             GROUP BY grp.ENCOUNTER_GROUP

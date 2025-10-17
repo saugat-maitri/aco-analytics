@@ -67,7 +67,7 @@ layout = (
                                                                     id="ccsr-encounter-type-chart",
                                                                     style={
                                                                         "overflowY": "auto",
-                                                                        "height": "250px",
+                                                                        "maxHeight": "250px",
                                                                     },
                                                                 ),
                                                             ],
