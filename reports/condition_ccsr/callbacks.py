@@ -1,7 +1,8 @@
 from datetime import datetime
 
 import plotly.express as px
-from dash import Input, Output, callback
+from dash import Input, Output, callback, ctx
+from dash.exceptions import PreventUpdate
 
 from components.bar_chart import horizontal_bar_chart
 from components.metric_card import metric_card
@@ -18,26 +19,48 @@ from services.utils import dt_to_yyyymm, extract_sql_filters, format_large_numbe
 
 
 @callback(
+    Output("ccsr-active-filters-store", "data"),
+    Input("drillthrough-title", "children"),
+    Input("ccsr-encounter-group-chart", "selectedData"),
+    Input("ccsr-encounter-type-chart", "selectedData"),
+)
+def update_active_filter(drillthrough_title, selected_group, selected_type):
+    filters = {}
+    if drillthrough_title:
+        filters["CCSR_CATEGORY_DESCRIPTION"] = drillthrough_title
+
+    if (
+        ctx.triggered_id == "ccsr-encounter-group-chart"
+        and selected_group
+        and selected_group.get("points")
+    ):
+        group_filters = extract_sql_filters(group_selection=selected_group)
+        filters.update(group_filters)
+
+    elif (
+        ctx.triggered_id == "ccsr-encounter-type-chart"
+        and selected_type
+        and selected_type.get("points")
+    ):
+        type_filters = extract_sql_filters(encounter_type_selection=selected_type)
+        filters.update(type_filters)
+
+    return filters
+
+
+@callback(
     Output("ccsr-metrics-container", "children"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("ccsr-encounter-group-chart", "selectedData"),
-    Input("ccsr-encounter-type-chart", "selectedData"),
-    Input("drillthrough-title", "children"),
+    Input("ccsr-active-filters-store", "data"),
 )
-def update_ccsr_metrics(
-    start_date, end_date, selected_group, selected_type, drillthrough_title
-):
+def update_ccsr_metrics(start_date, end_date, active_filters):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(
-            group_selection=selected_group,
-            encounter_type_selection=selected_type,
-            ccsr_category_selection=drillthrough_title,
-        )
-        data = get_ccsr_metrics_data(start_yyyymm, end_yyyymm, filters=filters)
+
+        data = get_ccsr_metrics_data(start_yyyymm, end_yyyymm, filters=active_filters)
 
         if data.empty:
             return no_data_figure(message="No data available for the selected period.")
@@ -73,20 +96,23 @@ def update_ccsr_metrics(
     Output("ccsr-encounter-group-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("ccsr-encounter-type-chart", "selectedData"),
-    Input("drillthrough-title", "children"),
+    Input("ccsr-active-filters-store", "data"),
+    Input("ccsr-encounter-group-chart", "selectedData"),
 )
 def update_ccsr_encounter_group_chart(
-    start_date, end_date, selected_type, drillthrough_title
+    start_date, end_date, active_filters, selected_group
 ):
+    if ctx.triggered_id == "ccsr-encounter-group-chart" and selected_group:
+        raise PreventUpdate
+
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(
-            encounter_type_selection=selected_type,
-            ccsr_category_selection=drillthrough_title,
-        )
+
+        filters = dict(active_filters or {})
+        filters.pop("ENCOUNTER_GROUP", None)
+
         data = get_pmpm_performance_vs_expected_data(
             start_yyyymm, end_yyyymm, filters=filters
         )
@@ -117,19 +143,23 @@ def update_ccsr_encounter_group_chart(
     Output("ccsr-encounter-type-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("ccsr-encounter-group-chart", "selectedData"),
-    Input("drillthrough-title", "children"),
+    Input("ccsr-active-filters-store", "data"),
+    Input("ccsr-encounter-type-chart", "selectedData"),
 )
 def update_ccsr_encounter_type_chart(
-    start_date, end_date, selected_group, drillthrough_title
+    start_date, end_date, active_filters, selected_type
 ):
+    if ctx.triggered_id == "ccsr-encounter-type-chart" and selected_type:
+        raise PreventUpdate
+
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(
-            group_selection=selected_group, ccsr_category_selection=drillthrough_title
-        )
+
+        filters = dict(active_filters or {})
+        filters.pop("ENCOUNTER_TYPE", None)
+
         data = get_pmpm_by_encounter_type_data(
             start_yyyymm, end_yyyymm, filters=filters
         )
@@ -196,10 +226,7 @@ def update_cost_per_by_facility_chart(
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-        filters = extract_sql_filters(
-            group_selection=selected_group, ccsr_category_selection=drillthrough_title
-        )
-        data = get_cost_per_by_facility_data(start_yyyymm, end_yyyymm, filters=filters)
+        data = get_cost_per_by_facility_data(start_yyyymm, end_yyyymm, filters=None)
 
         return horizontal_bar_chart(
             data=data,
