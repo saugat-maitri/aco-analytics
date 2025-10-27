@@ -19,7 +19,10 @@ def dt_to_yyyymm(dt):
 
 
 def extract_sql_filters(
-    group_selection=None, encounter_type_selection=None, ccsr_category_selection=None
+    group_selection=None,
+    encounter_type_selection=None,
+    ccsr_category_selection=None,
+    diagnosis_selection=None,
 ):
     """Extract SQL filter values from selected data points or direct string inputs.
 
@@ -27,6 +30,7 @@ def extract_sql_filters(
         group_selection (dict or str, optional): The selected encounter group.
         encounter_type_selection (dict or str, optional): The selected encounter type.
         ccsr_category_selection (dict or str, optional): The selected CCSR category.
+        diagnosis_selection (dict or str, optional): The selected diagnosis.
 
     Returns:
         dict: A dictionary of SQL filter column names and their selected values.
@@ -64,6 +68,17 @@ def extract_sql_filters(
             filters["CCSR_CATEGORY_DESCRIPTION"] = (
                 ccsr_data if ccsr_data != "other" else None
             )
+
+    # Handle Diagnosis selection
+    if diagnosis_selection:
+        if isinstance(diagnosis_selection, str):
+            filters["PRIMARY_DIAGNOSIS_DESCRIPTION"] = diagnosis_selection
+        elif isinstance(diagnosis_selection, dict) and diagnosis_selection.get(
+            "points"
+        ):
+            filters["PRIMARY_DIAGNOSIS_DESCRIPTION"] = diagnosis_selection["points"][0][
+                "label"
+            ]
 
     return filters
 

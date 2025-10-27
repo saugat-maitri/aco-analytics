@@ -17,7 +17,7 @@ def get_ccsr_metrics_data(
         category_claims AS (
             SELECT 
                 fc.CCSR_CATEGORY_DESCRIPTION, 
-                SUM(fc.PAID_AMOUNT) AS TOTAL_PAID,
+                COALESCE(SUM(fc.PAID_AMOUNT), 0) AS TOTAL_PAID,
                 COUNT(DISTINCT fc.ENCOUNTER_ID) as ENCOUNTER_COUNT
             FROM FACT_CLAIMS AS fc 
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
@@ -71,7 +71,7 @@ def get_pmpm_by_encounter_type_data(
          WITH claims_by_encounter_type AS (
             SELECT
                 typ.ENCOUNTER_TYPE,
-                SUM(PAID_AMOUNT) as TOTAL_PAID
+                COALESCE(SUM(PAID_AMOUNT), 0) as TOTAL_PAID
             FROM FACT_CLAIMS clm
             LEFT JOIN DIM_ENCOUNTER_GROUP grp
                 ON clm.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
@@ -110,10 +110,12 @@ def get_paid_by_diagnosis_data(
     query = f"""
         SELECT
             PRIMARY_DIAGNOSIS_DESCRIPTION,
-            SUM(PAID_AMOUNT) AS PAID_AMOUNT
+            COALESCE(SUM(PAID_AMOUNT), 0) AS PAID_AMOUNT
         FROM FACT_CLAIMS
         LEFT JOIN DIM_ENCOUNTER_GROUP grp
             ON FACT_CLAIMS.ENCOUNTER_GROUP_SK = grp.ENCOUNTER_GROUP_SK
+        LEFT JOIN DIM_ENCOUNTER_TYPE typ
+            ON FACT_CLAIMS.ENCOUNTER_TYPE_SK = typ.ENCOUNTER_TYPE_SK
         WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
         {filter_clause}
         GROUP BY PRIMARY_DIAGNOSIS_DESCRIPTION
@@ -128,7 +130,7 @@ def get_cost_per_by_facility_data(
     query = f"""
         SELECT 
             COALESCE(FACILITY_TYPE, '(Blank)') AS FACILITY_TYPE,
-            SUM(PAID_AMOUNT) AS PAID_AMOUNT
+            COALESCE(SUM(PAID_AMOUNT), 0) AS PAID_AMOUNT
         FROM FACT_ENCOUNTERS
         WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
         GROUP BY COALESCE(FACILITY_TYPE, '(Blank)')

@@ -34,7 +34,7 @@ def header():
             ),
             html.Div(
                 id="drillthrough-title",
-                style={"fontSize": "16px", "fontWeight": "semibold"},
+                style={"fontSize": "16px", "fontWeight": "bold"},
             ),
             html.Div(
                 [

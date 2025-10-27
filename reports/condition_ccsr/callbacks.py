@@ -23,8 +23,11 @@ from services.utils import dt_to_yyyymm, extract_sql_filters, format_large_numbe
     Input("drillthrough-title", "children"),
     Input("ccsr-encounter-group-chart", "selectedData"),
     Input("ccsr-encounter-type-chart", "selectedData"),
+    Input("ccsr-paid-by-diagnosis-chart", "clickData"),
 )
-def update_active_filter(drillthrough_title, selected_group, selected_type):
+def update_active_filter(
+    drillthrough_title, selected_group, selected_type, selected_diagnosis
+):
     filters = {}
     if drillthrough_title:
         filters["CCSR_CATEGORY_DESCRIPTION"] = drillthrough_title
@@ -44,6 +47,22 @@ def update_active_filter(drillthrough_title, selected_group, selected_type):
     ):
         type_filters = extract_sql_filters(encounter_type_selection=selected_type)
         filters.update(type_filters)
+
+    elif (
+        ctx.triggered_id == "ccsr-paid-by-diagnosis-chart"
+        and selected_diagnosis
+        and selected_diagnosis.get("points")
+    ):
+        points = selected_diagnosis.get("points")
+        if (
+            points[0].get("entry")
+            and points[0]["entry"] == "All"
+            and not points[0].get("label") == "All"
+        ):
+            diagnosis_filters = extract_sql_filters(
+                diagnosis_selection=selected_diagnosis
+            )
+            filters.update(diagnosis_filters)
 
     return filters
 
@@ -110,11 +129,8 @@ def update_ccsr_encounter_group_chart(
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
-        filters = dict(active_filters or {})
-        filters.pop("ENCOUNTER_GROUP", None)
-
         data = get_pmpm_performance_vs_expected_data(
-            start_yyyymm, end_yyyymm, filters=filters
+            start_yyyymm, end_yyyymm, filters=active_filters
         )
 
         return horizontal_bar_chart(
@@ -157,11 +173,8 @@ def update_ccsr_encounter_type_chart(
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
-        filters = dict(active_filters or {})
-        filters.pop("ENCOUNTER_TYPE", None)
-
         data = get_pmpm_by_encounter_type_data(
-            start_yyyymm, end_yyyymm, filters=filters
+            start_yyyymm, end_yyyymm, filters=active_filters
         )
 
         return horizontal_bar_chart(
@@ -191,18 +204,18 @@ def update_ccsr_encounter_type_chart(
     Output("ccsr-paid-by-diagnosis-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("ccsr-encounter-group-chart", "selectedData"),
-    Input("drillthrough-title", "children"),
+    Input("ccsr-active-filters-store", "data"),
+    Input("ccsr-paid-by-diagnosis-chart", "clickData"),
 )
 def update_paid_by_diagnosis_treemap(
-    start_date, end_date, selected_group, drillthrough_title
+    start_date, end_date, active_filters, selected_diagnosis
 ):
+    if ctx.triggered_id == "ccsr-paid-by-diagnosis-chart" and selected_diagnosis:
+        raise PreventUpdate
+
     start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
     end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
-    filters = extract_sql_filters(
-        group_selection=selected_group, ccsr_category_selection=drillthrough_title
-    )
-    data = get_paid_by_diagnosis_data(start_yyyymm, end_yyyymm, filters=filters)
+    data = get_paid_by_diagnosis_data(start_yyyymm, end_yyyymm, filters=active_filters)
 
     return treemap_chart(
         data=data,
@@ -216,12 +229,8 @@ def update_paid_by_diagnosis_treemap(
     Output("ccsr-cost-per-by-facility-chart", "figure"),
     Input("date-picker-input", "start_date"),
     Input("date-picker-input", "end_date"),
-    Input("ccsr-encounter-group-chart", "selectedData"),
-    Input("drillthrough-title", "children"),
 )
-def update_cost_per_by_facility_chart(
-    start_date, end_date, selected_group, drillthrough_title
-):
+def update_cost_per_by_facility_chart(start_date, end_date):
     try:
         # Convert date strings to YYYYMM format for filtering
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
@@ -232,16 +241,16 @@ def update_cost_per_by_facility_chart(
             data=data,
             x="PAID_AMOUNT",
             y="FACILITY_TYPE",
-            text_fn=["${:,.0f}".format(val) for val in data["PAID_AMOUNT"]],
+            text_fn=[f"${format_large_number(val)}" for val in data["PAID_AMOUNT"]],
             bar_height=45,
             show_tick_labels=False,
             plot_bgcolor="white",
             click_mode="event+select",
-            custom_data=data["FACILITY_TYPE"],
+            custom_data=data[["FACILITY_TYPE", "PAID_AMOUNT"]],
             text_position="outside",
             hover_template=(
-                "    Facility Type: %{customdata}   <br>"
-                "    Paid Amount: %{text}    <br><br>"
+                "    Facility Type: %{customdata[0]}   <br>"
+                "    Paid Amount: $%{customdata[1]:,.2f}    <br><br>"
                 "<extra></extra>"
             ),
             truncate_limit=20,

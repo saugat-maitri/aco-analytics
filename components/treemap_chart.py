@@ -37,7 +37,7 @@ def treemap_chart(data, path_columns, values, title=None, hovertemplate=None):
         )
 
         fig.update_layout(
-            margin=dict(l=10, r=10, t=10, b=25),
+            margin=dict(l=10, r=10, t=20, b=15),
             plot_bgcolor="white",
             paper_bgcolor="white",
             showlegend=False,

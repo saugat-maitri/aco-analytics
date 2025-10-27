@@ -14,6 +14,7 @@ layout = (
                 style={
                     "position": "fixed",
                     "bottom": "30px",
+                    "right": "30px",
                     "zIndex": 10,
                 },
             ),
