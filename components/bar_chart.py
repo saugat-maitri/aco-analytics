@@ -154,7 +154,7 @@ def horizontal_bar_chart(
 
     custom = (
         custom_data if custom_data is not None else y_value
-    )  # Use custom data if provided, else use y values fot the text
+    )  # Use custom data if provided, else use y values for the text
 
     def truncate_label(label, limit=15):
         if len(label) <= limit:

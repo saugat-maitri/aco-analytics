@@ -14,7 +14,7 @@ register_page(
 layout = (
     html.Div(
         [
-            dcc.Store(id="ccsr-active-filters-store", storage_type="local"),
+            dcc.Store(id="ccsr-active-filters-store"),
             dbc.Row(
                 [
                     dbc.Col(

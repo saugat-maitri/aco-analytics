@@ -341,7 +341,6 @@ def show_floating_button(selection):
     return button
 
 
-
 @callback(
     Output("drillthrough-selection", "data"),
     Input("condition-ccsr-chart", "selectedData"),
@@ -355,10 +354,9 @@ def select_drillthrough(selected_condition, selected_group):
         if not selected_condition or "points" not in selected_condition:
             return None
 
-        ccsr_name = (
-            selected_condition["points"][0].get("customdata")
-            or selected_condition["points"][0].get("y")
-        )
+        ccsr_name = selected_condition["points"][0].get(
+            "customdata"
+        ) or selected_condition["points"][0].get("y")
         return {"chart": "condition-ccsr", "label": ccsr_name}
 
     elif triggered == "encounter-group-chart":

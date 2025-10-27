@@ -42,10 +42,8 @@ def update_drillthrough_title(href):
 
     if path == "/condition-ccsr":
         return query.get("ccsr", [""])[0]
-    elif path == "/encounter-group":
-        return query.get("group", [""])[0]
     else:
-        return ""
+        return path.replace("/", "").replace("%20", " ")
 
 
 if __name__ == "__main__":
