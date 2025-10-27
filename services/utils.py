@@ -19,28 +19,67 @@ def dt_to_yyyymm(dt):
 
 
 def extract_sql_filters(
-    group_selection=None, encounter_type_selection=None, ccsr_category_selection=None
+    group_selection=None,
+    encounter_type_selection=None,
+    ccsr_category_selection=None,
+    diagnosis_selection=None,
 ):
-    """Extract SQL filter values from selected data points in interactive charts.
+    """Extract SQL filter values from selected data points or direct string inputs.
 
     Args:
-        group_selection (dict, optional): Selected encounter group.
-        encounter_type_selection (dict, optional): Selected encounter type.
-        ccsr_category_selection (dict, optional): Selected CCSR category.
+        group_selection (dict or str, optional): The selected encounter group.
+        encounter_type_selection (dict or str, optional): The selected encounter type.
+        ccsr_category_selection (dict or str, optional): The selected CCSR category.
+        diagnosis_selection (dict or str, optional): The selected diagnosis.
 
     Returns:
-        dict: Dictionary of SQL filter column names and their selected values.
+        dict: A dictionary of SQL filter column names and their selected values.
     """
     filters = {}
-    if group_selection and group_selection.get("points"):
-        filters["ENCOUNTER_GROUP"] = group_selection["points"][0]["y"]
-    if encounter_type_selection and encounter_type_selection.get("points"):
-        filters["ENCOUNTER_TYPE"] = encounter_type_selection["points"][0]["y"]
-    if ccsr_category_selection and ccsr_category_selection.get("points"):
-        ccsr_data = ccsr_category_selection["points"][0]["customdata"]
-        filters["CCSR_CATEGORY_DESCRIPTION"] = (
-            ccsr_data if ccsr_data != "other" else None
-        )
+
+    # Handle Encounter Group selection
+    if group_selection:
+        if isinstance(group_selection, str):
+            filters["ENCOUNTER_GROUP"] = group_selection
+        elif isinstance(group_selection, dict) and group_selection.get("points"):
+            filters["ENCOUNTER_GROUP"] = group_selection["points"][0]["y"]
+
+    # Handle Encounter Type selection
+    if encounter_type_selection:
+        if isinstance(encounter_type_selection, str):
+            filters["ENCOUNTER_TYPE"] = encounter_type_selection
+        elif isinstance(
+            encounter_type_selection, dict
+        ) and encounter_type_selection.get("points"):
+            filters["ENCOUNTER_TYPE"] = encounter_type_selection["points"][0]["y"]
+
+    # Handle CCSR Category selection
+    if ccsr_category_selection:
+        ccsr_data = None
+        if isinstance(ccsr_category_selection, str):
+            ccsr_data = ccsr_category_selection
+        elif isinstance(ccsr_category_selection, dict) and ccsr_category_selection.get(
+            "points"
+        ):
+            ccsr_data = ccsr_category_selection["points"][0]["customdata"]
+
+        if ccsr_data is not None:
+            # If the extracted data is "other", map it to None; otherwise, use the data.
+            filters["CCSR_CATEGORY_DESCRIPTION"] = (
+                ccsr_data if ccsr_data != "other" else None
+            )
+
+    # Handle Diagnosis selection
+    if diagnosis_selection:
+        if isinstance(diagnosis_selection, str):
+            filters["PRIMARY_DIAGNOSIS_DESCRIPTION"] = diagnosis_selection
+        elif isinstance(diagnosis_selection, dict) and diagnosis_selection.get(
+            "points"
+        ):
+            filters["PRIMARY_DIAGNOSIS_DESCRIPTION"] = diagnosis_selection["points"][0][
+                "label"
+            ]
+
     return filters
 
 
@@ -83,28 +122,28 @@ def truncate_text(text, max_length=30):
 
 
 def format_large_number(value):
-    """Format a numeric value with a dollar sign and appropriate suffix (B, M, K).
+    """Format a numeric value with appropriate suffix (B, M, K).
 
     Args:
         value (float): The number to format.
 
     Returns:
-        str: Formatted string with dollar sign and suffix.
+        str: Formatted string with suffix.
 
     Examples:
-            - 1234567890 -> "$1B"
-            - 1234567 -> "$1M"
-            - 1234 -> "$1K"
-            - 123.45 -> "$123.45"
+            - 1234567890 -> "1B"
+            - 1234567 -> "1M"
+            - 1234 -> "1.2K"
+            - 123.45 -> "123"
     """
     if value >= 1_000_000_000:
-        return f"${value / 1_000_000_000:.0f}B"
+        return f"{value / 1_000_000_000:.0f}B"
     elif value >= 1_000_000:
-        return f"${value / 1_000_000:.0f}M"
+        return f"{value / 1_000_000:.0f}M"
     elif value >= 1_000:
-        return f"${value / 1_000:.0f}K"
+        return f"{value / 1_000:.1f}K"
     else:
-        return f"${value:.2f}"
+        return f"{value:.0f}"
 
 
 def get_comparison_period(

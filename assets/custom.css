@@ -42,6 +42,7 @@ p {
     background-color: white;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     padding-left: 1.5rem;
     padding-right: 1.5rem;

@@ -103,7 +103,7 @@ def horizontal_bar_chart(
     target=None,
     color_fn=None,
     text_fn=None,
-    margin=dict(l=20, r=20, t=0, b=0, pad=5),
+    margin=dict(l=20, r=0, t=0, b=0, pad=5),
     marker_color="#64AFE0",
     bar_height=20,
     show_tick_labels=True,
@@ -114,6 +114,7 @@ def horizontal_bar_chart(
     hover_template=None,
     hover_backgroundcolor="white",
     hover_textcolor="black",
+    truncate_limit=15,
 ):
     """Create and return a horizontal bar chart using plotly.
 
@@ -135,6 +136,7 @@ def horizontal_bar_chart(
         hover_template (str, optional): Template for hover information display. Defaults to None.
         hover_backgroundcolor (str, optional): Background color for hover labels. Defaults to 'white'.
         hover_textcolor (str, optional): Text color for hover labels. Defaults to 'black'.
+        truncate_limit (int, optional): Character limit for truncating text labels. Defaults to 15.
 
     Returns:
         plotly.graph_objs.Figure: A horizontal bar chart figure object.
@@ -152,7 +154,28 @@ def horizontal_bar_chart(
 
     custom = (
         custom_data if custom_data is not None else y_value
-    )  # Use custom data if provided, else use y values fot the text
+    )  # Use custom data if provided, else use y values for the text
+
+    def truncate_label(label, limit=15):
+        if len(label) <= limit:
+            return label
+        # Find the last whitespace before the cutoff
+        cutoff = label[:limit].rstrip()
+        space_index = cutoff.rfind(" ")
+        if space_index != -1:
+            cutoff = cutoff[:space_index]
+        return cutoff.strip() + "…"
+
+    # Create truncated labels for display only
+    truncated_y_labels = [truncate_label(label, truncate_limit) for label in y_value]
+
+    max_value = max(x_value) if not x_value.empty else 0
+    n_bars = len(y_value) if not y_value.empty else 1
+    x_range_max = max_value * 1.2 if max_value > 0 else 1
+    min_height = 200
+    fig_height = max(
+        min_height, n_bars * bar_height + 100
+    )  # Define the height of the bar to maintain the proper height of graph
 
     fig = go.Figure(
         go.Bar(
@@ -193,7 +216,7 @@ def horizontal_bar_chart(
 
     fig.update_layout(
         margin=margin,
-        yaxis=dict(autorange="reversed"),
+        yaxis=dict(autorange="reversed", tickvals=y_value, ticktext=truncated_y_labels),
         xaxis=dict(showticklabels=show_tick_labels, range=[0, x_range_max]),
         plot_bgcolor=plot_bgcolor,
         clickmode=click_mode,

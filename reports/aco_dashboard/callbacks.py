@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from dash import Input, Output, callback
+from dash import Input, Output, State, callback, ctx, html, no_update
 
 from components.bar_chart import horizontal_bar_chart, stacked_percentage_bar
 from components.demographics_card import demographics_card
@@ -14,7 +14,6 @@ from services.utils import (
     format_large_number,
     get_comparison_offset,
     get_comparison_period,
-    truncate_text,
 )
 
 from .data import (
@@ -118,19 +117,17 @@ def update_condition_ccsr_cost_driver_graph(start_date, end_date, selected_group
         filters = extract_sql_filters(group_selection=selected_group)
         ccsr_data = get_condition_ccsr_data(start_yyyymm, end_yyyymm, filters)
 
-        ccsr_data["TRUNCATED_CATEGORY"] = ccsr_data["CCSR_CATEGORY_DESCRIPTION"].apply(
-            lambda x: truncate_text(x, 35)
-        )
         return horizontal_bar_chart(
             data=ccsr_data,
             x="PMPM",
-            y="TRUNCATED_CATEGORY",
+            y="CCSR_CATEGORY_DESCRIPTION",
             text_fn=[f"${v:,.0f}" for v in ccsr_data["PMPM"]],
             show_tick_labels=False,
             custom_data=ccsr_data["CCSR_CATEGORY_DESCRIPTION"],
             hover_template=(
                 "CCSR Category: %{customdata}<br>PMPM: %{text}<br><extra></extra>"
             ),
+            truncate_limit=40,
         )
     except Exception as e:
         print(f"Error in update_condition_ccsr_cost_driver_graph: {e}")
@@ -200,17 +197,17 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr_cate
         data = get_encounter_group_pmpm(start_yyyymm, end_yyyymm, filters)
         expected_pmpm = get_encounter_group_expected_pmpm(
             start_yyyymm, end_yyyymm
-        ).melt(var_name="ENCOUNTER_GROUP", value_name="PREDICTED_PMPM")
+        ).melt(var_name="ENCOUNTER_GROUP", value_name="EXPECTED_PMPM")
 
         # Merge actual and expected data
         merged_data = pd.merge(data, expected_pmpm, on="ENCOUNTER_GROUP", how="left")
 
         # Determine if expected PMPM data is available
-        show_expected = not merged_data["PREDICTED_PMPM"].isna().all()
+        show_expected = not merged_data["EXPECTED_PMPM"].isna().all()
 
         # Configure hover data based on expected PMPM availability
         if show_expected:
-            custom_data = merged_data[["ENCOUNTER_GROUP", "PMPM", "PREDICTED_PMPM"]]
+            custom_data = merged_data[["ENCOUNTER_GROUP", "PMPM", "EXPECTED_PMPM"]]
             hover_template = (
                 "Encounter Group: %{customdata[0]}<br>"
                 "Actual PMPM: %{customdata[1]:,.2f}<br>"
@@ -228,7 +225,7 @@ def update_pmpm_performance_vs_expected(start_date, end_date, selected_ccsr_cate
             data=merged_data,
             x="PMPM",
             y="ENCOUNTER_GROUP",
-            target="PREDICTED_PMPM" if show_expected else None,
+            target="EXPECTED_PMPM" if show_expected else None,
             text_fn=["${:,.0f}".format(val) for val in merged_data["PMPM"]],
             bar_height=45,
             show_tick_labels=False,
@@ -295,7 +292,7 @@ def update_cohort_data(start_date, end_date, selected_group, selected_ccsr_categ
             x="total_paid_amount",
             y="percent_group",
             text_fn=[
-                f"{format_large_number(v)} {pct:.1f}%"
+                f"${format_large_number(v)} {pct:.1f}%"
                 for v, pct in zip(data["total_paid_amount"], data["percent_of_total"])
             ],
             bar_height=45,
@@ -311,3 +308,87 @@ def update_cohort_data(start_date, end_date, selected_group, selected_ccsr_categ
     except Exception as e:
         print(f"Error in update_cohort_data: {e}")
         return no_data_figure(message=f"Error loading data: {str(e)}")
+
+
+@callback(
+    Output("floating-drillthrough-btn-container", "children"),
+    Input("drillthrough-selection", "data"),
+)
+def show_floating_button(selection):
+    if not selection:
+        return None
+
+    label = selection["label"]
+
+    button_text = f"Drill Through → {label}"
+    button = html.Button(
+        button_text,
+        id="floating-drillthrough-btn",
+        n_clicks=0,
+        style={
+            "backgroundColor": "#007bff",
+            "color": "white",
+            "border": "none",
+            "padding": "10px 20px",
+            "borderRadius": "8px",
+            "boxShadow": "0 2px 8px rgba(0,0,0,0.2)",
+            "cursor": "pointer",
+            "fontSize": "12px",
+            "fontWeight": "600",
+        },
+    )
+
+    return button
+
+
+@callback(
+    Output("drillthrough-selection", "data"),
+    Input("condition-ccsr-chart", "selectedData"),
+    Input("encounter-group-chart", "selectedData"),
+    prevent_initial_call=True,
+)
+def select_drillthrough(selected_condition, selected_group):
+    triggered = ctx.triggered_id
+
+    if triggered == "condition-ccsr-chart":
+        if not selected_condition or "points" not in selected_condition:
+            return None
+
+        ccsr_name = selected_condition["points"][0].get(
+            "customdata"
+        ) or selected_condition["points"][0].get("y")
+        return {"chart": "condition-ccsr", "label": ccsr_name}
+
+    elif triggered == "encounter-group-chart":
+        if not selected_group or "points" not in selected_group:
+            return None
+
+        group_name = (
+            selected_group["points"][0].get("label")
+            or selected_group["points"][0].get("customdata")
+            or selected_group["points"][0].get("y")
+        )
+        return {"chart": "encounter-group", "label": group_name}
+
+    return None
+
+
+@callback(
+    Output("url", "href"),
+    Input("floating-drillthrough-btn", "n_clicks"),
+    State("drillthrough-selection", "data"),
+    prevent_initial_call=True,
+)
+def handle_redirect(n_clicks, selection):
+    if not n_clicks or not selection:
+        return no_update
+
+    chart = selection["chart"]
+    label = selection["label"]
+
+    if chart == "condition-ccsr":
+        return f"/condition-ccsr?ccsr={label}"
+    elif chart == "encounter-group":
+        return label
+    else:
+        return no_update
