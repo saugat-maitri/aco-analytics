@@ -9,7 +9,7 @@ from services.utils import build_filter_clause, dt_to_yyyymm
 
 def calc_kpis(
     start_date: datetime, end_date: datetime, filters: Optional[dict] = None
-) -> float:
+) -> tuple[float, float]:
     start_yyyymm = dt_to_yyyymm(start_date)
     end_yyyymm = dt_to_yyyymm(end_date)
 
@@ -29,24 +29,35 @@ def calc_kpis(
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
             {filter_clause}
         ),
-        member_months AS (
+        member_months_count AS (
             SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS mm
             FROM FACT_MEMBER_MONTHS
             WHERE YEAR_MONTH BETWEEN {start_yyyymm} AND {end_yyyymm}
+        ),
+        expected_agg_amount AS (
+             SELECT 
+               SUM(fev.paid_amount_pred * fmm.monthallocationfactor) AS predicted_paid_amount
+            FROM FACT_MEMBER_MONTHS fmm
+            INNER JOIN FACT_EXPECTED_VALUES fev 
+                ON fev.person_id = fmm.person_id
+                AND fev.year_nbr = CAST(SUBSTR(fmm.year_month, 1, 4) AS INTEGER)
+            WHERE fmm.year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
         )
         SELECT
             claims_agg.paid,
             claims_agg.encounters,
-            member_months.mm
-        FROM claims_agg, member_months
+            member_months_count.mm,
+            expected_agg_amount.predicted_paid_amount as expected_amount
+        FROM claims_agg, member_months_count, expected_agg_amount;
     """
     result = sqlite_manager.query(query, params)
     row = result.iloc[0]
     paid = row.get("paid") or 0
+    expected = row.get("expected_amount") or 0
     mm = row.get("mm") or 0
     if mm:
-        return paid / mm
-    return 0
+        return round(paid / mm, 2), round(expected / mm, 2)
+    return 0, 0
 
 
 def get_demographic_data(start_date: datetime, end_date: datetime) -> pd.DataFrame:
@@ -180,7 +191,7 @@ def get_condition_ccsr_data(
     return sqlite_manager.query(query, params)
 
 
-def get_pmpm_performance_vs_expected_data(
+def get_encounter_group_pmpm(
     start_yyyymm: int, end_yyyymm: int, filters: Optional[dict] = None
 ) -> pd.DataFrame:
     filter_clause, params = build_filter_clause(filters)
@@ -218,6 +229,55 @@ def get_pmpm_performance_vs_expected_data(
         ORDER BY PMPM DESC
     """
     return sqlite_manager.query(query, params)
+
+
+def get_encounter_group_expected_pmpm(
+    start_yyyymm: int, end_yyyymm: int
+) -> pd.DataFrame:
+    query = f"""
+            with encounter_group_expected_paid_amount as (
+                SELECT 
+                    SUM(fev.outpatient_paid_amount_pred * fmm.monthallocationfactor) AS predicted_outpatient_paid_amount,
+                    SUM(fev.inpatient_paid_amount_pred * fmm.monthallocationfactor) AS predicted_inpatient_paid_amount,
+                    SUM(fev.office_based_paid_amount_pred * fmm.monthallocationfactor) AS predicted_office_based_paid_amount,
+                    SUM(fev.other_paid_amount_pred * fmm.monthallocationfactor) AS predicted_other_paid_amount 
+                FROM FACT_MEMBER_MONTHS fmm
+                INNER JOIN FACT_EXPECTED_VALUES fev 
+                    ON fev.person_id = fmm.person_id
+                    AND fev.year_nbr = CAST(SUBSTR(fmm.year_month, 1, 4) AS INTEGER)
+                WHERE fmm.year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
+            ),
+        member_months AS (
+            SELECT COUNT(DISTINCT PERSON_ID || '-' || YEAR_MONTH) AS MEMBER_MONTHS_COUNT
+            FROM FACT_MEMBER_MONTHS
+            WHERE year_month BETWEEN {start_yyyymm} AND {end_yyyymm}
+        )
+
+        SELECT
+            CASE 
+                WHEN mm.MEMBER_MONTHS_COUNT > 0 
+                THEN eegp.predicted_outpatient_paid_amount / mm.MEMBER_MONTHS_COUNT 
+                ELSE 0 
+            END AS 'outpatient',
+            CASE 
+                WHEN mm.MEMBER_MONTHS_COUNT > 0 
+                THEN eegp.predicted_inpatient_paid_amount / mm.MEMBER_MONTHS_COUNT 
+                ELSE 0 
+            END AS 'inpatient',
+            CASE 
+                WHEN mm.MEMBER_MONTHS_COUNT > 0 
+                THEN eegp.predicted_office_based_paid_amount / mm.MEMBER_MONTHS_COUNT 
+                ELSE 0 
+            END AS 'office based',
+            CASE 
+                WHEN mm.MEMBER_MONTHS_COUNT > 0 
+                THEN eegp.predicted_other_paid_amount / mm.MEMBER_MONTHS_COUNT 
+                ELSE 0 
+            END AS 'other'
+        FROM encounter_group_expected_paid_amount eegp
+        CROSS JOIN member_months AS mm
+    """
+    return sqlite_manager.query(query)
 
 
 def get_cohort_data(start_yyyymm, end_yyyymm, filters) -> pd.DataFrame:

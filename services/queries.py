@@ -44,6 +44,18 @@ SELECT
 FROM FACT_MEMBER_MONTHS LIMIT 100000
 """
 
+fact_expected_values_query = """
+SELECT
+    YEAR_NBR,
+    PERSON_ID,
+    PAID_AMOUNT_PRED,
+    OUTPATIENT_PAID_AMOUNT_PRED,
+    OTHER_PAID_AMOUNT_PRED,
+    OFFICE_BASED_PAID_AMOUNT_PRED,
+    INPATIENT_PAID_AMOUNT_PRED
+FROM FACT_EXPECTED_VALUES
+"""
+
 dim_encounter_group_query = """
 SELECT
     ENCOUNTER_GROUP,
@@ -74,4 +86,5 @@ table_list = [
     {"table_name": "DIM_ENCOUNTER_GROUP", "query": dim_encounter_group_query},
     {"table_name": "DIM_ENCOUNTER_TYPE", "query": dim_encounter_type_query},
     {"table_name": "DIM_MEMBER", "query": dim_member},
+    {"table_name": "FACT_EXPECTED_VALUES", "query": fact_expected_values_query},
 ]

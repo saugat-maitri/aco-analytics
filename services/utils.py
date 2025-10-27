@@ -230,3 +230,23 @@ def get_comparison_offset(month, comparison_period, selected_months=None):
         return pd.DatetimeIndex([])
 
     return pd.date_range(start=comp_start, end=comp_end, freq="MS")
+
+
+def calculate_change_metrics(value, comparison_value):
+    try:
+        value_float = float(value)
+        comparison_float = float(comparison_value)
+        change_ratio = (
+            (value_float - comparison_float) / comparison_float
+            if comparison_float != 0
+            else 0
+        )
+        percent = f"{change_ratio:+.1%}"
+        arrow = "▲" if change_ratio >= 0 else "▼"
+        arrow_color = "red" if change_ratio >= 0 else "green"
+    except (TypeError, ValueError, ZeroDivisionError):
+        percent = "N/A"
+        arrow = ""
+        arrow_color = "black"
+
+    return percent, arrow, arrow_color
