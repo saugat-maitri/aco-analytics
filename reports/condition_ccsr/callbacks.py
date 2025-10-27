@@ -8,7 +8,7 @@ from components.bar_chart import horizontal_bar_chart
 from components.metric_card import metric_card
 from components.no_data_figure import no_data_figure
 from components.treemap_chart import treemap_chart
-from reports.aco_dashboard.data import get_pmpm_performance_vs_expected_data
+from reports.aco_dashboard.data import get_encounter_group_pmpm
 from reports.condition_ccsr.data import (
     get_ccsr_metrics_data,
     get_cost_per_by_facility_data,
@@ -129,7 +129,7 @@ def update_ccsr_encounter_group_chart(
         start_yyyymm = dt_to_yyyymm(datetime.strptime(start_date, "%Y-%m-%d"))
         end_yyyymm = dt_to_yyyymm(datetime.strptime(end_date, "%Y-%m-%d"))
 
-        data = get_pmpm_performance_vs_expected_data(
+        data = get_encounter_group_pmpm(
             start_yyyymm, end_yyyymm, filters=active_filters
         )
 

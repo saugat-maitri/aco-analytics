@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from dash import Input, Output, State, callback, html, no_update
+from dash import Input, Output, State, callback, ctx, html, no_update
 
 from components.bar_chart import horizontal_bar_chart, stacked_percentage_bar
 from components.demographics_card import demographics_card
@@ -14,7 +14,6 @@ from services.utils import (
     format_large_number,
     get_comparison_offset,
     get_comparison_period,
-    truncate_text,
 )
 
 from .data import (
@@ -342,34 +341,38 @@ def show_floating_button(selection):
     return button
 
 
+
 @callback(
-    Output("drillthrough-selection", "data", allow_duplicate=True),
+    Output("drillthrough-selection", "data"),
     Input("condition-ccsr-chart", "selectedData"),
-    prevent_initial_call=True,
-)
-def select_condition_ccsr(selectedData):
-    if not selectedData or "points" not in selectedData:
-        return None
-
-    ccsr_name = selectedData["points"][0].get("customdata") or selectedData["points"][
-        0
-    ].get("y")
-    return {"chart": "condition-ccsr", "label": ccsr_name}
-
-
-@callback(
-    Output("drillthrough-selection", "data", allow_duplicate=True),
     Input("encounter-group-chart", "selectedData"),
     prevent_initial_call=True,
 )
-def select_encounter_group(selectedData):
-    if not selectedData or "points" not in selectedData:
-        return None
+def select_drillthrough(selected_condition, selected_group):
+    triggered = ctx.triggered_id
 
-    group_name = selectedData["points"][0].get("customdata") or selectedData["points"][
-        0
-    ].get("y")
-    return {"chart": "encounter-group", "label": group_name}
+    if triggered == "condition-ccsr-chart":
+        if not selected_condition or "points" not in selected_condition:
+            return None
+
+        ccsr_name = (
+            selected_condition["points"][0].get("customdata")
+            or selected_condition["points"][0].get("y")
+        )
+        return {"chart": "condition-ccsr", "label": ccsr_name}
+
+    elif triggered == "encounter-group-chart":
+        if not selected_group or "points" not in selected_group:
+            return None
+
+        group_name = (
+            selected_group["points"][0].get("label")
+            or selected_group["points"][0].get("customdata")
+            or selected_group["points"][0].get("y")
+        )
+        return {"chart": "encounter-group", "label": group_name}
+
+    return None
 
 
 @callback(
@@ -388,6 +391,6 @@ def handle_redirect(n_clicks, selection):
     if chart == "condition-ccsr":
         return f"/condition-ccsr?ccsr={label}"
     elif chart == "encounter-group":
-        return f"/encounter-group?group={label}"
+        return label
     else:
         return no_update
