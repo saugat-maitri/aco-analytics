@@ -12,7 +12,7 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
     assets_folder="assets",
-    title="TUVA Health ACO Analytics",
+    title="Tuva Health Cost and Utilization",
     use_pages=True,
     pages_folder="reports",
 )
